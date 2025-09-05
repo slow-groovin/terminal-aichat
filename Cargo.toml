@@ -1,0 +1,8 @@
+[package]
+name = "termchat"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+async-openai = "0.29.2"
+clap = { version = "4.5.47", features = ["derive","cargo","env"] }
