@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ModelConfig {
     pub model_name: String,
     pub base_url: String,
-    pub api_key: String, // This will be encrypted in the config file
+    pub api_key: Option<String>, // This will be encrypted in the config file
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -38,5 +38,3 @@ impl Config {
         }
     }
 }
-
-pub mod manager;

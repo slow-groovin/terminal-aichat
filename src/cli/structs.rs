@@ -68,6 +68,7 @@ pub enum SetCommands {
     /// Set model configuration
     Model {
         /// Name of the model configuration
+        #[arg(index = 1)]
         name: String,
         /// Base URL for API
         #[arg(long)]
@@ -82,6 +83,7 @@ pub enum SetCommands {
     /// Set prompt configuration
     Prompt {
         /// Name of the prompt configuration
+        #[arg(index = 1)]
         name: String,
         /// Content of the prompt
         #[arg(long)]

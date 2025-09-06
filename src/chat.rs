@@ -17,7 +17,7 @@ use crossterm::{
 use futures::StreamExt;
 use std::io::{self, Write, stdout};
 
-pub async fn single_message(
+pub async fn completion(
     input: &str,
     model_config: &ModelConfig,
     prompt_config: &PromptConfig,
@@ -72,7 +72,7 @@ pub async fn single_message(
 fn create_client(model_config: &ModelConfig) -> Client<OpenAIConfig> {
     Client::with_config(
         OpenAIConfig::default()
-            .with_api_key(&model_config.api_key)
+            .with_api_key(&model_config.api_key.clone().unwrap_or(String::new()))
             .with_api_base(&model_config.base_url),
     )
 }
