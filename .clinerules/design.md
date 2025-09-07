@@ -23,13 +23,13 @@
 ## command
 ### chat
 ```sh
-tmchat <input content>
-tmchat hello? who are you?
-tmchat how to view release information
-tmchat -m qwen3 -p bash-prompt2  how to view release information
+aichat <input content>
+aichat hello? who are you?
+aichat how to view release information
+aichat -m qwen3 -p bash-prompt2  how to view release information
 
 # interactive mode
-tmchat
+aichat
 <input content and press Enter>
 ```
 
@@ -46,42 +46,42 @@ tmchat
 
 #### create or update model config
 ```sh
-tmchat set model <modelConfigName> --baseURL <baseUrl> --modelName <modelName> --apiKey <apiKey>
+aichat set model <modelConfigName> --baseURL <baseUrl> --modelName <modelName> --apiKey <apiKey>
 ##example
-tmchat set model gpt-account1  --baseURL https://openrouter.ai/api/v1 --modelName openai/gpt-5 --apiKey sk-ae7721eb147977aed7779f1
-tmchat set model qwen-local --baseURL https://localhost:3000/v1 --modelName qwen3-8b
+aichat set model gpt-account1  --baseURL https://openrouter.ai/api/v1 --modelName openai/gpt-5 --apiKey sk-ae7721eb147977aed7779f1
+aichat set model qwen-local --baseURL https://localhost:3000/v1 --modelName qwen3-8b
 ```
 #### create or update prompt config
 ```sh
-tmchat set prompt <promptConfigName> --content <content>
+aichat set prompt <promptConfigName> --content <content>
 ##example
-tmchat set prompt my-prompt --content "You are a helpful assistant that give shell command."
+aichat set prompt my-prompt --content "You are a helpful assistant that give shell command."
 ```
 
 #### set default config
 ```sh
-tmchat use model <modelConfigName>
-tmchat use prompt <promptConfigName>
+aichat use model <modelConfigName>
+aichat use prompt <promptConfigName>
 ```
 
 #### delete config
 ```sh
-tmchat delete model <modelConfigName>
-tmchat delete prompt <promptConfigName>
+aichat delete model <modelConfigName>
+aichat delete prompt <promptConfigName>
 ```
 
 
 #### list configs
 ```sh
-tmchat list models
-tmchat list prompts
-tmchat list 
+aichat list models
+aichat list prompts
+aichat list 
 ```
 
 ## config file
 
-- default location: `~/.tmchat/config.json`
-- randome key localtion (for enc/dec apiKeys): `~/.tmchat/aes_key.bin`
+- default location: `~/.terminal-aichat/config.json`
+- randome key localtion (for enc/dec apiKeys): `~/.terminal-aichat/aes_key.bin`
 
 
 ```json
