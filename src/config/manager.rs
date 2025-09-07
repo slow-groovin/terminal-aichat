@@ -12,7 +12,7 @@ pub struct ConfigManager {
 
 impl ConfigManager {
     pub fn new() -> io::Result<Self> {
-        let config_dir = dirs::home_dir().unwrap_or_default().join(".tmchat");
+        let config_dir = dirs::home_dir().unwrap_or_default().join(".terminal-aichat");
 
         if !config_dir.exists() {
             fs::create_dir_all(&config_dir)?;
@@ -59,7 +59,7 @@ impl ConfigManager {
             self.config.default_prompt = Some(name.clone());
         }
         self.config.prompts.insert(name, config);
-        self.save()``
+        self.save()
     }
 
     pub fn get_model(&self, name: &str) -> Option<ModelConfig> {

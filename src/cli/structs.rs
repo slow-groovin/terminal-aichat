@@ -1,14 +1,18 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "termchat")]
-#[command(about = "A terminal chat tool for LLM", long_about = None)]
+#[command(name = "aichat", version="0.0.1", 
+about=r#"
+A terminal AI/LLM chat tool
+
+aichat [INPUT]   # directly chat 
+aichat [COMMAND] [ARGS]     # setting or view configs"#,
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
 
-    /// Chat input content (when no subcommand is provided)
-    pub input: Vec<String>,
+
 
     /// Specify model configuration to use
     #[arg(short, long)]
@@ -33,6 +37,9 @@ pub struct Cli {
     /// Specify config file path
     #[arg(long)]
     pub config: Option<String>,
+
+    /// Chat input content (when no subcommand is provided)
+    pub input: Vec<String>,
 }
 
 #[derive(Subcommand)]
@@ -86,7 +93,7 @@ pub enum SetCommands {
         #[arg(index = 1)]
         name: String,
         /// Content of the prompt
-        #[arg(long)]
+        #[arg(long, )]
         content: String,
     },
 }
