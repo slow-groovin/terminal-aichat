@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ModelConfig {
-    pub model_name: String,
-    pub base_url: String,
+    pub model_name: Option<String>,
+    pub base_url: Option<String>,
     pub api_key: Option<String>, // This will be encrypted in the config file
 }
 

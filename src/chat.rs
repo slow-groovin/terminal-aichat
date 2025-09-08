@@ -1,21 +1,15 @@
 use crate::config::{ModelConfig, PromptConfig};
 use async_openai::{
     Client,
-    config::{Config, OpenAIConfig},
+    config::OpenAIConfig,
     types::{
-        ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestSystemMessageArgs,
+        ChatCompletionRequestSystemMessageArgs,
         ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequest,
         CreateChatCompletionRequestArgs,
     },
 };
-use crossterm::{
-    cursor::{MoveToColumn, MoveUp},
-    execute,
-    style::Stylize,
-    terminal::{Clear, ClearType},
-};
 use futures::StreamExt;
-use std::io::{self, Write, stdout};
+use std::io::{Write, stdout};
 
 pub async fn completion(
     input: &str,
@@ -26,9 +20,9 @@ pub async fn completion(
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let client = create_client(&model_config);
-
+    let model_name=model_config.model_name.as_ref().unwrap();
     if verbose && !pure {
-        println!("Using model: {}", model_config.model_name);
+        println!("Using model: {}", model_name);
     }
 
     if disable_stream {
@@ -63,7 +57,6 @@ pub async fn completion(
             }
             stdout().flush()?;
         }
-        println!();
     }
 
     Ok(())
@@ -73,7 +66,7 @@ fn create_client(model_config: &ModelConfig) -> Client<OpenAIConfig> {
     Client::with_config(
         OpenAIConfig::default()
             .with_api_key(&model_config.api_key.clone().unwrap_or(String::new()))
-            .with_api_base(&model_config.base_url),
+            .with_api_base(model_config.base_url.as_ref().unwrap()),
     )
 }
 
@@ -83,7 +76,7 @@ fn create_request(
     model_config: &ModelConfig,
 ) -> CreateChatCompletionRequest {
     CreateChatCompletionRequestArgs::default()
-        .model(&model_config.model_name)
+        .model(model_config.model_name.as_ref().unwrap())
         .messages([
             ChatCompletionRequestSystemMessageArgs::default()
                 .content(prompt_config.content.as_ref())

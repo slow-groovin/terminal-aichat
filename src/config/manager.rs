@@ -53,8 +53,8 @@ impl ConfigManager {
         // Define a default model configuration
         let default_model_name = "gpt".to_string();
         let default_model_config = ModelConfig {
-            model_name: "gpt-5-mini".to_string(), // Example default model
-            base_url: "https://api.openai.com/v1".to_string(), // Example default base URL
+            model_name: Some("gpt-5-mini".to_string()), // Example default model
+            base_url: Some("https://api.openai.com/v1".to_string()), // Example default base URL
             api_key: None, // API key can be set later or via environment variable
         };
         self.set_model(default_model_name.clone(), default_model_config)?;

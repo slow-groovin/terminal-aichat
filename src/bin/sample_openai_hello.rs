@@ -1,14 +1,11 @@
 use async_openai::{
     Client,
-    config::{Config, OpenAIConfig},
+    config::OpenAIConfig,
     types::{
-        ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestUserMessage,
-        ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs,
-        CreateCompletionRequestArgs, User,
+        ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs,
     },
 };
 use std::error::Error;
-use std::io;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
