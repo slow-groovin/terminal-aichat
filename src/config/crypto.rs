@@ -17,7 +17,7 @@ impl CryptoManager {
             fs::read(key_path)?
         } else {
             let mut key = vec![0u8; 32];
-            rand::thread_rng().fill_bytes(&mut key);
+            rand::rng().fill_bytes(&mut key);
             fs::write(key_path, &key)?;
             key
         };

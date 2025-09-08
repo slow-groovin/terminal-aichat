@@ -1,11 +1,63 @@
-use clap::Parser;
 use crate::chat;
-use crate::cli::config::{list_models,list_prompts};
+use crate::cli::interactive::interactive_input;
 use crate::cli::structs::{Cli, Commands, DeleteCommands, SetCommands, UseCommands};
+use clap::Parser;
 
-use crate::config::{ConfigManager,ModelConfig, PromptConfig,};
+use crate::config::{ConfigManager, ModelConfig, PromptConfig};
 use crossterm::style::Stylize;
 
+pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
+
+    // Initialize config manager
+    let mut config_manager = ConfigManager::new()?;
+
+    // Handle subcommands
+    match &cli.command {
+        Some(Commands::Set { config }) => {
+            handle_set_command(&mut config_manager, config).await?;
+        }
+        Some(Commands::Use { config }) => {
+            handle_use_command(&mut config_manager, config).await?;
+        }
+        Some(Commands::Delete { config }) => {
+            handle_delete_command(&mut config_manager, config).await?;
+        }
+        Some(Commands::List { config_type }) => {
+            handle_list_command(&config_manager, config_type, cli.verbose).await?;
+        }
+        Some(Commands::Init {}) => {
+            handle_init().await?;
+        }
+        None => {
+            handle_chat_command(&cli, &config_manager).await?;
+        }
+    }
+    println!("DEBUG: DONE.");
+    Ok(())
+}
+
+async fn handle_init() -> Result<(), Box<dyn std::error::Error>> {
+    let mut config_manager = ConfigManager::new()?;
+
+    if config_manager.config_file_exists() {
+        println!(
+            "{}",
+            "Configuration file already exists. No new configuration created.".yellow()
+        );
+    } else {
+        let (model_name, prompt_name) = config_manager.initialize_default_configs()?;
+        println!(
+            "{}",
+            format!(
+                "Default configurations for model '{}' and prompt '{}' have been initialized.",
+                model_name, prompt_name
+            )
+            .green()
+        );
+    }
+    Ok(())
+}
 
 async fn handle_set_command(
     config_manager: &mut ConfigManager,
@@ -154,7 +206,10 @@ async fn handle_chat_command(
         .or_else(|| config_manager.get_default_model())
         .ok_or("No model specified and no default model set")?;
 
-    let prompt_name = cli.prompt.clone().or_else(|| config_manager.get_default_prompt());
+    let prompt_name = cli
+        .prompt
+        .clone()
+        .or_else(|| config_manager.get_default_prompt());
 
     let model_config = config_manager
         .get_model(&model)
@@ -162,12 +217,20 @@ async fn handle_chat_command(
 
     // If input is empty,(interactive mode) wait for input, then call single_message
     if cli.input.is_empty() {
-        // interactive_input().await?; // This function is not implemented yet
-        eprintln!("{}", "Interactive mode not yet implemented.".red());
+        let input = interactive_input().await?;
+        let prompt_config = if let Some(p_name) = prompt_name {
+            config_manager
+                .get_prompt(&p_name)
+                .ok_or(format!("Prompt configuration '{}' not found", p_name))?
+        } else {
+            return Err("No prompt specified and no default prompt set".into());
+        };
     } else {
         let input = cli.input.join(" ");
         let prompt_config = if let Some(p_name) = prompt_name {
-            config_manager.get_prompt(&p_name).ok_or(format!("Prompt configuration '{}' not found", p_name))?
+            config_manager
+                .get_prompt(&p_name)
+                .ok_or(format!("Prompt configuration '{}' not found", p_name))?
         } else {
             return Err("No prompt specified and no default prompt set".into());
         };
@@ -185,38 +248,45 @@ async fn handle_chat_command(
     Ok(())
 }
 
-pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
-    let cli = Cli::parse();
-
-    // Initialize config manager
-    let mut config_manager = ConfigManager::new()?;
-
-    // Handle subcommands
-    match &cli.command {
-        Some(Commands::Set { config }) => {
-            handle_set_command(&mut config_manager, config).await?;
-        }
-        Some(Commands::Use { config }) => {
-            handle_use_command(&mut config_manager, config).await?;
-        }
-        Some(Commands::Delete { config }) => {
-            handle_delete_command(&mut config_manager, config).await?;
-        }
-        Some(Commands::List { config_type }) => {
-            handle_list_command(&config_manager, config_type, cli.verbose).await?;
-        }
-        None => {
-            handle_chat_command(&cli, &config_manager).await?;
+pub fn list_models(config_manager: &ConfigManager, verbose: bool) {
+    for model in config_manager.list_models() {
+        let is_default = config_manager
+            .get_default_model()
+            .map(|m| m == model)
+            .unwrap_or(false);
+        if verbose {
+            if let Some(config) = config_manager.get_model(&model) {
+                print!("  {}", model);
+                if is_default {
+                    print!(" {}", "(default)".green());
+                }
+                println!(
+                    " (model: {}, base_url: {})",
+                    config.model_name, config.base_url
+                );
+            }
+        } else {
+            print!("  {}", model);
+            if is_default {
+                println!(" {}", "(default)".green());
+            } else {
+                println!();
+            }
         }
     }
-    println!("DEBUG: DONE.");
-    Ok(())
 }
 
-/**
- * 接受用户输入, shift+enter换行, enter确定. 返回input内容
- */
-async fn interactive_input(){
-
+pub fn list_prompts(config_manager: &ConfigManager) {
+    for prompt in config_manager.list_prompts() {
+        let is_default = config_manager
+            .get_default_prompt()
+            .map(|p| p == prompt)
+            .unwrap_or(false);
+        print!("  {}", prompt);
+        if is_default {
+            println!(" {}", "(default)".green());
+        } else {
+            println!();
+        }
+    }
 }
