@@ -12,7 +12,9 @@ pub struct ConfigManager {
 
 impl ConfigManager {
     pub fn new() -> io::Result<Self> {
-        let config_dir = dirs::home_dir().unwrap_or_default().join(".terminal-aichat");
+        let config_dir = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".terminal-aichat");
 
         if !config_dir.exists() {
             fs::create_dir_all(&config_dir)?;
@@ -35,9 +37,44 @@ impl ConfigManager {
         })
     }
 
+    /// Checks if the configuration file already exists.
+    pub fn config_file_exists(&self) -> bool {
+        self.config_path.exists()
+    }
+
+    /// Saves the current configuration to the file.
     pub fn save(&self) -> io::Result<()> {
         let content = serde_json::to_string_pretty(&self.config)?;
         fs::write(&self.config_path, content)
+    }
+
+    /// Initializes default model and prompt configurations if they don't exist.
+    pub fn initialize_default_configs(&mut self) -> io::Result<(String, String)> {
+        // Define a default model configuration
+        let default_model_name = "gpt".to_string();
+        let default_model_config = ModelConfig {
+            model_name: "gpt-5-mini".to_string(), // Example default model
+            base_url: "https://api.openai.com/v1".to_string(), // Example default base URL
+            api_key: None, // API key can be set later or via environment variable
+        };
+        self.set_model(default_model_name.clone(), default_model_config)?;
+
+        // Define a default prompt configuration
+        let default_prompt_name = "default".to_string();
+        let default_prompt_content = r#"You are a terminal assistant. 
+You are currently chatting within the terminal.
+Do not use Markdown for your responses, use plain text only."#
+            .to_string();
+        let default_prompt_config = PromptConfig {
+            content: default_prompt_content,
+        };
+        self.set_prompt(default_prompt_name.clone(), default_prompt_config)?;
+
+        // Set the newly created model and prompt as default
+        self.set_default_model(default_model_name.clone())?;
+        self.set_default_prompt(default_prompt_name.clone())?;
+
+        Ok((default_model_name, default_prompt_name))
     }
 
     pub fn set_model(&mut self, name: String, mut config: ModelConfig) -> io::Result<()> {
