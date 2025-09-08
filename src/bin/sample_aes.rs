@@ -1,6 +1,5 @@
-use aes::cipher::generic_array::GenericArray;
 use aes_gcm::{
-    aead::{Aead, AeadCore, KeyInit, OsRng}, Aes256Gcm, Error, Key, Nonce
+    aead::{Aead, AeadCore, KeyInit, OsRng}, Aes256Gcm, Error, Key
 };
 
 fn main() -> Result<(),Error> {

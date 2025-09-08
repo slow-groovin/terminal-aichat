@@ -1,8 +1,10 @@
-use crate::chat;
+use std::process::exit;
+
+use crate::{chat, log_debug, utils};
 use crate::cli::interactive::interactive_input;
 use crate::cli::structs::{Cli, Commands, DeleteCommands, SetCommands, UseCommands};
 use clap::Parser;
-
+use utils::logger::{self};
 use crate::config::{ConfigManager, ModelConfig, PromptConfig};
 use crossterm::style::Stylize;
 
@@ -33,7 +35,6 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_chat_command(&cli, &config_manager).await?;
         }
     }
-    println!("DEBUG: DONE.");
     Ok(())
 }
 
@@ -200,51 +201,70 @@ async fn handle_chat_command(
     cli: &Cli,
     config_manager: &ConfigManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let model = cli
-        .model
-        .clone()
-        .or_else(|| config_manager.get_default_model())
-        .ok_or("No model specified and no default model set")?;
+    let model_name = cli.model.clone().or(config_manager.get_default_model());
 
     let prompt_name = cli
         .prompt
         .clone()
         .or_else(|| config_manager.get_default_prompt());
 
-    let model_config = config_manager
-        .get_model(&model)
-        .ok_or(format!("Model configuration '{}' not found", model))?;
+    if matches!(model_name.as_deref(), None | Some("")) {
+        println!(
+            "❌ No model config specified, please use {} to set or  {} to specify.",
+            "aichat use model <MODEL_CONFIG_NAME>".green(),
+            "-m <MODEL_CONFIG_NAME>".green()
+        );
+        exit(78);
+    }
+    if matches!(prompt_name.as_deref(), None | Some("")) {
+        println!(
+            "❌ No prompt config specified, please use {} to set or  {} to specify.",
+            "aichat use prompt <PROMPT_CONFIG_NAME>".green(),
+            "-p <PROMPT_CONFIG_NAME>".green()
+        );
+        exit(78);
+    }
+
+    let model_name:&str=model_name.as_ref().unwrap();
+    let prompt_name:&str=prompt_name.as_ref().unwrap();
+
+    let model_config = config_manager.get_model(model_name).unwrap_or_else(|| {
+            println!("❌Model configuration '{}' not found", model_name.blue());
+            std::process::exit(78);
+        });
+
+    let prompt_config = config_manager.get_prompt(prompt_name).unwrap_or_else(|| {
+        println!("❌Prompt configuration '{}' not found", prompt_name.blue());
+        std::process::exit(78);
+    });
 
     // If input is empty,(interactive mode) wait for input, then call single_message
-    if cli.input.is_empty() {
+    let input = if cli.input.is_empty() {
         let input = interactive_input().await?;
-        let prompt_config = if let Some(p_name) = prompt_name {
-            config_manager
-                .get_prompt(&p_name)
-                .ok_or(format!("Prompt configuration '{}' not found", p_name))?
-        } else {
-            return Err("No prompt specified and no default prompt set".into());
-        };
+        input
     } else {
         let input = cli.input.join(" ");
-        let prompt_config = if let Some(p_name) = prompt_name {
-            config_manager
-                .get_prompt(&p_name)
-                .ok_or(format!("Prompt configuration '{}' not found", p_name))?
-        } else {
-            return Err("No prompt specified and no default prompt set".into());
-        };
+        input
+    };
 
-        chat::completion(
-            &input,
-            &model_config,
-            &prompt_config,
-            cli.pure,
-            cli.disable_stream,
-            cli.verbose,
-        )
-        .await?;
+    if input.trim().is_empty(){
+        println!("{}","⚠ Input message is empty.".yellow());
+        exit(1);
     }
+
+
+    log_debug!("Begin to chat. model: {}, prompt: {}, input: {}...",model_name,prompt_name, &input[0..20]);
+    chat::completion(
+        &input,
+        &model_config,
+        &prompt_config,
+        cli.pure,
+        cli.disable_stream,
+        cli.verbose,
+    )
+    .await?;
+
+    log_debug!("Chat Done.");
     Ok(())
 }
 
@@ -262,7 +282,8 @@ pub fn list_models(config_manager: &ConfigManager, verbose: bool) {
                 }
                 println!(
                     " (model: {}, base_url: {})",
-                    config.model_name, config.base_url
+                    config.model_name.unwrap_or(String::from("null")),
+                    config.base_url.unwrap_or(String::from("null"))
                 );
             }
         } else {

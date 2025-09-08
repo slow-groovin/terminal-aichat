@@ -7,8 +7,10 @@ use clap::{Parser, Subcommand};
     about = r#"
 A terminal AI/LLM chat tool
 
-aichat [INPUT]   # directly chat 
-aichat [COMMAND] [ARGS]     # setting or view configs"#
+aichat [MESSAGE]   # directly chat 
+aichat             # directly chat (enter input mode)
+aichat [COMMAND] [ARGS]     # setting or view configs"#,
+    arg_required_else_help = true
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -26,7 +28,7 @@ pub struct Cli {
     #[arg(long)]
     pub verbose: bool,
 
-    /// Use pure output mode (no rendering)
+    /// Use pure output mode (no extra text and color rendering)
     #[arg(long)]
     pub pure: bool,
 
@@ -35,14 +37,18 @@ pub struct Cli {
     pub disable_stream: bool,
 
     /// Specify config file path
-    #[arg(long)]
-    pub config: Option<String>,
+    // #[arg(long)]
+    // pub config: Option<String>,
+
+    #[arg(long,value_parser = non_empty_string)]
+    pub test: Option<String>,
 
     /// Chat input content (when no subcommand is provided)
     pub input: Vec<String>,
 }
 
 #[derive(Subcommand)]
+
 pub enum Commands {
     /// Set model or prompt configuration
     Set {
@@ -74,18 +80,21 @@ pub enum Commands {
 }
 
 #[derive(Subcommand)]
+#[command(
+    arg_required_else_help = true   // 👈 只对 Add 生效
+)]
 pub enum SetCommands {
     /// Set model configuration
     Model {
         /// Name of the model configuration
-        #[arg(index = 1)]
+        #[arg(index = 1, value_parser = non_empty_string)]
         name: String,
         /// Base URL for API
-        #[arg(long)]
-        base_url: String,
+        #[arg(long, value_parser = non_empty_string)]
+        base_url: Option<String>,
         /// Model name
-        #[arg(long)]
-        model_name: String,
+        #[arg(long, value_parser = non_empty_string)]
+        model_name: Option<String>,
         /// API key
         #[arg(long)]
         api_key: Option<String>,
@@ -93,7 +102,7 @@ pub enum SetCommands {
     /// Set prompt configuration
     Prompt {
         /// Name of the prompt configuration
-        #[arg(index = 1)]
+        #[arg(index = 1, value_parser = non_empty_string)]
         name: String,
         /// Content of the prompt
         #[arg(long)]
@@ -127,4 +136,12 @@ pub enum DeleteCommands {
         /// Name of the prompt configuration
         name: String,
     },
+}
+
+fn non_empty_string(s: &str) -> Result<String, String> {
+    if s.trim().is_empty() {
+        Err("param cannot be empty".to_string())
+    } else {
+        Ok(s.to_string())
+    }
 }
