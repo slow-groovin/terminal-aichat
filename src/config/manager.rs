@@ -78,10 +78,14 @@ Do not use Markdown for your responses, use plain text only."#
     }
 
     pub fn set_model(&mut self, name: String, mut config: ModelConfig) -> io::Result<()> {
+        let exist_model = self.get_model(&name);
         // Encrypt API key before saving, if present
         if let Some(api_key) = config.api_key {
             config.api_key = Some(self.crypto_manager.encrypt(&api_key)?);
         }
+
+        //merge with exist config
+        let config = merge_model(config, exist_model);
         // If there's no default model, set the newly added one as default
         if self.config.default_model.is_none() {
             self.config.default_model = Some(name.clone());
@@ -91,10 +95,14 @@ Do not use Markdown for your responses, use plain text only."#
     }
 
     pub fn set_prompt(&mut self, name: String, config: PromptConfig) -> io::Result<()> {
+        let exist_prompt = self.get_prompt(&name);
+        let config = merge_prompt(config, exist_prompt);
+
         // If there's no default prompt, set the newly added one as default
         if self.config.default_prompt.is_none() {
             self.config.default_prompt = Some(name.clone());
         }
+
         self.config.prompts.insert(name, config);
         self.save()
     }
@@ -148,11 +156,37 @@ Do not use Markdown for your responses, use plain text only."#
         self.config.prompts.keys().cloned().collect()
     }
 
-    pub fn get_default_model(&self) -> Option<String> {
+    pub fn get_default_model_name(&self) -> Option<String> {
         self.config.default_model.clone()
     }
 
-    pub fn get_default_prompt(&self) -> Option<String> {
+    pub fn get_default_prompt_name(&self) -> Option<String> {
         self.config.default_prompt.clone()
     }
+}
+fn merge_model(mut new_config: ModelConfig, base_config: Option<ModelConfig>) -> ModelConfig {
+    if base_config.is_none() {
+        return new_config;
+    }
+    let ModelConfig {
+        api_key,
+        base_url,
+        model_name,
+    } = base_config.unwrap();
+    new_config.api_key = new_config.api_key.or(api_key);
+    new_config.model_name = new_config.model_name.or(model_name);
+    new_config.base_url = new_config.base_url.or(base_url);
+    return new_config;
+}
+
+fn merge_prompt(mut new_config: PromptConfig, base_config: Option<&PromptConfig>) -> PromptConfig {
+    if base_config.is_none() {
+        return new_config;
+    }
+    new_config.content = if new_config.content.is_empty() {
+        base_config.as_ref().unwrap().content.clone()
+    } else {
+        new_config.content
+    };
+    return new_config;
 }

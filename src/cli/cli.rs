@@ -1,5 +1,7 @@
 use std::process::exit;
 
+use crate::utils::logger::set_log_level;
+use crate::utils::StringUtils;
 use crate::{chat, log_debug, utils};
 use crate::cli::interactive::interactive_input;
 use crate::cli::structs::{Cli, Commands, DeleteCommands, SetCommands, UseCommands};
@@ -10,6 +12,10 @@ use crossterm::style::Stylize;
 
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+
+    if cli.verbose{
+        set_log_level(logger::LogLevel::Trace);
+    }
 
     // Initialize config manager
     let mut config_manager = ConfigManager::new()?;
@@ -71,16 +77,12 @@ async fn handle_set_command(
             model_name,
             api_key,
         } => {
-            let final_api_key = api_key
-                .clone()
-                .or_else(|| std::env::var("OPENAI_API_KEY").ok());
-
             config_manager.set_model(
                 name.clone(),
                 ModelConfig {
                     base_url: base_url.clone(),
                     model_name: model_name.clone(),
-                    api_key: final_api_key,
+                    api_key: api_key.clone(),
                 },
             )?;
             println!(
@@ -201,12 +203,12 @@ async fn handle_chat_command(
     cli: &Cli,
     config_manager: &ConfigManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let model_name = cli.model.clone().or(config_manager.get_default_model());
+    let model_name = cli.model.clone().or(config_manager.get_default_model_name());
 
     let prompt_name = cli
         .prompt
         .clone()
-        .or_else(|| config_manager.get_default_prompt());
+        .or_else(|| config_manager.get_default_prompt_name());
 
     if matches!(model_name.as_deref(), None | Some("")) {
         println!(
@@ -253,7 +255,7 @@ async fn handle_chat_command(
     }
 
 
-    log_debug!("Begin to chat. model: {}, prompt: {}, input: {}...",model_name,prompt_name, &input[0..20]);
+    log_debug!("Begin to chat. model: {}, prompt: {}, input: {}...",model_name,prompt_name, &input.safe_substring(20));
     chat::completion(
         &input,
         &model_config,
@@ -271,7 +273,7 @@ async fn handle_chat_command(
 pub fn list_models(config_manager: &ConfigManager, verbose: bool) {
     for model in config_manager.list_models() {
         let is_default = config_manager
-            .get_default_model()
+            .get_default_model_name()
             .map(|m| m == model)
             .unwrap_or(false);
         if verbose {
@@ -300,7 +302,7 @@ pub fn list_models(config_manager: &ConfigManager, verbose: bool) {
 pub fn list_prompts(config_manager: &ConfigManager) {
     for prompt in config_manager.list_prompts() {
         let is_default = config_manager
-            .get_default_prompt()
+            .get_default_prompt_name()
             .map(|p| p == prompt)
             .unwrap_or(false);
         print!("  {}", prompt);

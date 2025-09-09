@@ -8,8 +8,8 @@ use async_openai::{
         CreateChatCompletionRequestArgs,
     },
 };
+use crate::cli::response_render::{ResponseRenderer, RenderConfig, ResponseStatus};
 use futures::StreamExt;
-use std::io::{Write, stdout};
 
 pub async fn completion(
     input: &str,
@@ -20,10 +20,7 @@ pub async fn completion(
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let client = create_client(&model_config);
-    let model_name=model_config.model_name.as_ref().unwrap();
-    if verbose && !pure {
-        println!("Using model: {}", model_name);
-    }
+    let model_name = model_config.model_name.as_ref().unwrap();
 
     if disable_stream {
         let response = client
@@ -40,23 +37,36 @@ pub async fn completion(
             .create_stream(create_request(input, &prompt_config, &model_config))
             .await?;
 
-        let mut lock = stdout().lock();
+        // 创建渲染器配置
+        let mut config = RenderConfig {
+            pure,
+            model_name: model_name.to_string(),
+            prompt_name: "default".to_string(),
+            type_speed: 50, // 50字/秒
+            status_refresh_interval: 1000, // 1秒刷新一次状态
+        };
+        let renderer = ResponseRenderer::new(config);
+
         while let Some(result) = stream.next().await {
             match result {
                 Ok(response) => {
-                    response.choices.iter().for_each(|chat_choice| {
+                    for chat_choice in response.choices.iter() {
                         if let Some(ref content) = chat_choice.delta.content {
-                            write!(lock, "{}", content).unwrap();
+                            renderer.push_content(content).await?;
                         }
-                    });
+                    }
                 }
                 Err(e) => {
+                    renderer.set_status(ResponseStatus::Error).await?;
                     eprintln!("\nError: {}", e);
                     break;
                 }
             }
-            stdout().flush()?;
         }
+
+        renderer.set_status(ResponseStatus::Done).await?;
+        let mut renderer=renderer;
+        renderer.wait().await;
     }
 
     Ok(())
