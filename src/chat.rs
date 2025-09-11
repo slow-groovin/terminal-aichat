@@ -1,27 +1,33 @@
-use crate::config::{ModelConfig, PromptConfig};
+use crate::cli::response_render::{RenderConfig, ResponseRenderer};
+use crate::{
+    config::{ModelConfig, PromptConfig},
+    log_debug
+};
 use async_openai::{
     Client,
     config::OpenAIConfig,
+    error::OpenAIError,
     types::{
-        ChatCompletionRequestSystemMessageArgs,
-        ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequest,
-        CreateChatCompletionRequestArgs,
+        ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
+        CreateChatCompletionRequest, CreateChatCompletionRequestArgs,
     },
 };
-use crate::cli::response_render::{ResponseRenderer, RenderConfig, ResponseStatus};
 use futures::StreamExt;
 
 pub async fn completion(
     input: &str,
+    model_config_name: String,
     model_config: &ModelConfig,
+    prompt_config_name:String,
     prompt_config: &PromptConfig,
     pure: bool,
     disable_stream: bool,
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let _=verbose;
     let client = create_client(&model_config);
     let model_name = model_config.model_name.as_ref().unwrap();
-
+    
     if disable_stream {
         let response = client
             .chat()
@@ -38,35 +44,43 @@ pub async fn completion(
             .await?;
 
         // 创建渲染器配置
-        let mut config = RenderConfig {
+        let config = RenderConfig {
             pure,
+            model_config_name: model_config_name,
             model_name: model_name.to_string(),
-            prompt_name: "default".to_string(),
+            prompt_config_name,
             type_speed: 50, // 50字/秒
-            status_refresh_interval: 1000, // 1秒刷新一次状态
         };
-        let renderer = ResponseRenderer::new(config);
-
+        let mut errors = Vec::<OpenAIError>::new();
+        let renderer = ResponseRenderer::new();
+        let (message_tx, renderer_handler) = renderer.start_render(config);
+        log_debug!("Start receive stream message.");
         while let Some(result) = stream.next().await {
             match result {
                 Ok(response) => {
                     for chat_choice in response.choices.iter() {
-                        if let Some(ref content) = chat_choice.delta.content {
-                            renderer.push_content(content).await?;
+                        if let Some(content) = &chat_choice.delta.content {
+                            if let Err(_) = message_tx.send(content.clone()).await {};
                         }
                     }
                 }
                 Err(e) => {
-                    renderer.set_status(ResponseStatus::Error).await?;
-                    eprintln!("\nError: {}", e);
-                    break;
+                    errors.push(e);
                 }
             }
         }
+        log_debug!("Exit receive stream message.");
+        drop(message_tx);
+        log_debug!("Drop Message Sender.");
+        let _=renderer_handler.await;
+        log_debug!("Response Render exit.");
 
-        renderer.set_status(ResponseStatus::Done).await?;
-        let mut renderer=renderer;
-        renderer.wait().await;
+
+        if !errors.is_empty() {
+            for e in errors {
+                println!("Error happends: {}", e);
+            }
+        }
     }
 
     Ok(())
