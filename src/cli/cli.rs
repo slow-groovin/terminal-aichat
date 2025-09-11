@@ -16,7 +16,10 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if cli.verbose{
         set_log_level(logger::LogLevel::Trace);
     }
-
+    if !cli.test.is_none(){
+        // test();
+        // return Ok(());
+    }
     // Initialize config manager
     let mut config_manager = ConfigManager::new()?;
 
@@ -38,6 +41,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_init().await?;
         }
         None => {
+
             handle_chat_command(&cli, &config_manager).await?;
         }
     }
@@ -258,7 +262,9 @@ async fn handle_chat_command(
     log_debug!("Begin to chat. model: {}, prompt: {}, input: {}...",model_name,prompt_name, &input.safe_substring(20));
     chat::completion(
         &input,
+        model_name.to_string(),
         &model_config,
+        prompt_name.to_string(),
         &prompt_config,
         cli.pure,
         cli.disable_stream,
