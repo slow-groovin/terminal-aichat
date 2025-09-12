@@ -1,8 +1,9 @@
 use super::{Config, ModelConfig, PromptConfig};
+use crate::cli::structs::Cli;
 use crate::config::CryptoManager;
 use dirs;
 use std::path::PathBuf;
-use std::{fs, io};
+use std::{env, fs, io};
 
 pub struct ConfigManager {
     config: Config,
@@ -11,10 +12,8 @@ pub struct ConfigManager {
 }
 
 impl ConfigManager {
-    pub fn new() -> io::Result<Self> {
-        let config_dir = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".terminal-aichat");
+    pub fn load() -> io::Result<Self> {
+        let config_dir = dirs::home_dir().unwrap_or_default().join(".terminal-aichat");
 
         if !config_dir.exists() {
             fs::create_dir_all(&config_dir)?;
@@ -55,7 +54,7 @@ impl ConfigManager {
         let default_model_config = ModelConfig {
             model_name: Some("gpt-5-mini".to_string()), // Example default model
             base_url: Some("https://api.openai.com/v1".to_string()), // Example default base URL
-            api_key: None, // API key can be set later or via environment variable
+            api_key: None,                              // API key can be set later or via environment variable
         };
         self.set_model(default_model_name.clone(), default_model_config)?;
 
@@ -189,4 +188,32 @@ fn merge_prompt(mut new_config: PromptConfig, base_config: Option<&PromptConfig>
         new_config.content
     };
     return new_config;
+}
+
+/**
+ * 解析/解决配置, 优先级为：配置文件 < 参数 < 环境变量
+ */
+fn resolve_configuration(cli: Cli, config: Config) -> Config {
+    let mut resolved_config = config;
+
+    // 1. Resolve Model Configuration
+    let mut effective_model_name = cli.model.clone().or(resolved_config.default_model.clone());
+
+    // 2. Resolve Prompt Configuration
+    let effective_prompt_name = cli.prompt.clone().or(resolved_config.default_prompt.clone());
+    resolved_config.default_model = effective_prompt_name;
+
+    // 3. Resolve Global Flags (disable_stream, pure, verbose)
+    // Priority: CLI > Config File
+
+    // disable_stream
+    resolved_config.disable_stream = Some(cli.disable_stream || resolved_config.disable_stream.unwrap_or(false));
+
+    // pure
+    resolved_config.pure = Some(cli.pure || resolved_config.pure.unwrap_or(false));
+
+    // verbose
+    resolved_config.verbose = Some(cli.verbose || resolved_config.verbose.unwrap_or(false));
+
+    resolved_config
 }

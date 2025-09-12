@@ -24,6 +24,7 @@ pub struct Config {
     #[serde(rename = "disable-stream")]
     pub disable_stream: Option<bool>,
     pub pure: Option<bool>,
+    pub verbose: Option<bool>,
 }
 
 impl Config {
@@ -35,6 +36,7 @@ impl Config {
             default_prompt: None,
             disable_stream: Some(false),
             pure: Some(false),
+            verbose: Some(false),
         }
     }
 }

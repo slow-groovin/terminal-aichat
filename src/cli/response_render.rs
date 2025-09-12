@@ -1,5 +1,6 @@
 use crossterm::{
-    cursor, style::{Print, ResetColor, SetBackgroundColor, Stylize}, QueueableCommand
+    QueueableCommand, cursor,
+    style::{Print, ResetColor, SetBackgroundColor, Stylize},
 };
 use std::{
     io::{self, Write, stdout},
@@ -21,6 +22,7 @@ pub struct RenderConfig {
     pub prompt_config_name: String,
     /// 打字机效果的速度（字符/秒）
     pub type_speed: u32,
+    pub disable_stream: bool,
 }
 
 /// 响应渲染器
@@ -36,10 +38,7 @@ impl ResponseRenderer {
         }
     }
 
-    pub fn start_render(
-        &self,
-        config: RenderConfig,
-    ) -> (Sender<String>, tokio::task::JoinHandle<()>) {
+    pub fn start_render(&self, config: RenderConfig) -> (Sender<String>, tokio::task::JoinHandle<()>) {
         let (message_tx, message_rx) = mpsc::channel(100);
         let start_time = self.start_time; // Copy start_time
 
@@ -51,11 +50,7 @@ impl ResponseRenderer {
     }
 
     /// 渲染任务 - 处理所有消息并渲染
-    async fn render_task_impl(
-        start_time: Instant,
-        config: RenderConfig,
-        mut message_rx: Receiver<String>,
-    ) {
+    async fn render_task_impl(start_time: Instant, config: RenderConfig, mut message_rx: Receiver<String>) {
         let mut stdout = stdout();
         if !config.pure {
             let _ = Self::render_status_bar(&mut stdout, &config);
@@ -67,7 +62,11 @@ impl ResponseRenderer {
         // 非阻塞处理所有待处理消息
         while let Some(value) = message_rx.recv().await {
             //渲染字符
-            Self::print_with_interval(value.as_str(), char_interval).await;
+            if config.disable_stream {
+                print!("{}", value);
+            } else {
+                Self::print_with_interval(value.as_str(), char_interval).await;
+            }
         }
 
         let cost = Instant::now() - start_time;
@@ -76,7 +75,7 @@ impl ResponseRenderer {
 
         if !config.pure {
             // 打印尾部
-            let _ = stdout.queue(Print(format!("✅{:#?}", cost).dark_green()));
+            let _ = stdout.queue(Print(format!("\n✅{:#?}", cost).dark_green()));
         }
 
         // 结束时换行
@@ -85,11 +84,8 @@ impl ResponseRenderer {
     }
 
     /// 渲染状态栏（固定在status_row）
-    fn render_status_bar(
-        stdout: &mut std::io::Stdout,
-        config: &RenderConfig,
-    ) -> Result<(), io::Error> {
-        let _ = stdout
+    fn render_status_bar(stdout: &mut std::io::Stdout, config: &RenderConfig) -> Result<(), io::Error> {
+        stdout
             .queue(SetBackgroundColor(crossterm::style::Color::DarkBlue))?
             .queue(Print("model:"))?
             .queue(Print(config.model_config_name.clone().dark_yellow().bold()))?
@@ -99,10 +95,6 @@ impl ResponseRenderer {
             .queue(Print(config.model_name.clone().cyan().bold().on_dark_blue()))?
             .queue(ResetColor)?
             .queue(Print("\n"))?
-            .flush()?;
-
-        stdout
-            .queue(cursor::MoveToNextLine(1))?
             .queue(cursor::EnableBlinking)?
             .flush()
     }
