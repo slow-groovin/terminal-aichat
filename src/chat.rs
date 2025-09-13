@@ -33,7 +33,7 @@ pub async fn completion(
         model_config_name: model_config_name,
         model_name: model_name.to_string(),
         prompt_config_name,
-        type_speed: 10, // 50字/秒
+        type_speed: 30, // 50字/秒
         disable_stream: disable_stream,
     };
     let mut errors = Vec::<OpenAIError>::new();
@@ -104,8 +104,17 @@ fn create_request(
     prompt_config: &PromptConfig,
     model_config: &ModelConfig,
 ) -> CreateChatCompletionRequest {
-    CreateChatCompletionRequestArgs::default()
-        .model(model_config.model_name.as_ref().unwrap())
+    let mut builder = CreateChatCompletionRequestArgs::default();
+    builder.model(model_config.model_name.as_ref().unwrap());
+
+    match model_config.temperature {
+        Some(val) => {
+            builder.temperature(val);
+        }
+        None => {}
+    };
+    builder
+        .temperature(model_config.temperature.unwrap())
         .messages([
             ChatCompletionRequestSystemMessageArgs::default()
                 .content(prompt_config.content.as_ref())

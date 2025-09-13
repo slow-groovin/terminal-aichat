@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'main'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=main"
+          
+        ],
+        "filter": {
+          "name": "main",
+          "kind": "bin"
+        }
+      },
+      "args":[
+        "set",
+        "model",
+        "m1",
+        "--temperature",
+        "0.32"
+      ],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -77,6 +77,7 @@ impl ConfigManager {
             model_name: Some("gpt-5-mini".to_string()), // Example default model
             base_url: Some("https://api.openai.com/v1".to_string()), // Example default base URL
             api_key: None,                              // API key can be set later or via environment variable
+            temperature: None,
         };
         self.set_model(default_model_name.clone(), default_model_config)?;
 
@@ -100,22 +101,26 @@ Because of terminal cannot render markdown, DO NOT contain any markdown syntax(`
         Ok((default_model_name, default_prompt_name))
     }
 
-    pub fn set_model(&mut self, name: String, mut config: ModelConfig) -> io::Result<()> {
+    pub fn set_model(&mut self, name: String, config: ModelConfig) -> io::Result<()> {
         let exist_model = self.get_model(&name);
-        // Encrypt API key before saving, if present
-        if let Some(api_key) = config.api_key {
-            config.api_key = Some(self.crypto_manager.encrypt(&api_key)?);
-        }
+        
 
         //merge with exist config
-        let config = merge_model(config, exist_model);
+        let mut config = merge_model(config, exist_model);
         // If there's no default model, set the newly added one as default
         if self.file_config.default_model.is_none() {
             self.file_config.default_model = Some(name.clone());
         }
+
+        // Encrypt API key before saving, if present
+        if let Some(api_key) = config.api_key {
+            config.api_key = Some(self.crypto_manager.encrypt(&api_key)?);
+        }
         self.file_config.models.insert(name, config);
         self.save()
     }
+
+
 
     pub fn set_prompt(&mut self, name: String, config: PromptConfig) -> io::Result<()> {
         let exist_prompt = self.get_prompt(&name);
@@ -201,10 +206,12 @@ fn merge_model(mut new_config: ModelConfig, base_config: Option<ModelConfig>) ->
         api_key,
         base_url,
         model_name,
+        temperature,
     } = base_config.unwrap();
     new_config.api_key = new_config.api_key.or(api_key);
     new_config.model_name = new_config.model_name.or(model_name);
     new_config.base_url = new_config.base_url.or(base_url);
+    new_config.temperature = new_config.temperature.or(temperature);
     return new_config;
 }
 

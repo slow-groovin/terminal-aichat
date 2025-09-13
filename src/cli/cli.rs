@@ -83,6 +83,7 @@ async fn handle_set_command(
             base_url,
             model_name,
             api_key,
+            temperature,
         } => {
             config_manager.set_model(
                 name.clone(),
@@ -90,6 +91,7 @@ async fn handle_set_command(
                     base_url: base_url.clone(),
                     model_name: model_name.clone(),
                     api_key: api_key.clone(),
+                    temperature: temperature.clone()
                 },
             )?;
             println!("{}", format!("Model configuration '{}' has been set.", name).green());

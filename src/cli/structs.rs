@@ -98,6 +98,9 @@ pub enum SetCommands {
         /// API key
         #[arg(long)]
         api_key: Option<String>,
+
+        #[arg(long)]
+        temperature: Option<f32>,
     },
     /// Set prompt configuration
     Prompt {
