@@ -2,16 +2,8 @@
 简单易用的AI CHAT CLI, 使用 Openai-compatible `/v1/chat/completion` API 在终端内进行快捷chat
 
 ```sh
-# directly send message
-aichat how to view ubuntu release version
-
-# if you message is conflict with subcommand, use "" to wrap
-aichat "set swap memory to 0" 
-
-# message enter mode
-aichat
-how to view ubuntu release version
-## (Enter to newline, Enter empty line twice to send)
+aichat [MESSAGE]   # chat 
+aichat             # chat (enter input mode)
 ```
 
 ## 快速入门
@@ -28,7 +20,16 @@ aichat use model my_model_1
 ```
 ### chat
 ```sh
-aichat "hello?"
+# Directly send a message
+aichat how to view ubuntu release version
+
+# If your message conflicts with a subcommand, wrap it with quotes
+aichat "set swap memory to 0"
+
+# Enter interactive message mode
+aichat
+how to view ubuntu release version
+## (Press Enter for a newline, press Enter twice on an empty line to send)
 ```
 
 ### 使用示例

@@ -1,8 +1,9 @@
 [package]
 name = "terminal-aichat"
 description = "A simple and lightweight AI chat CLI tool using OpenAI-compatible `/v1/chat/completion` API for quick chat in terminal."
+repository = "https://github.com/slow-groovin/terminal-aichat"
 license = "MIT"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 
 [[bin]]
