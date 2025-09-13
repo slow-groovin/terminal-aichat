@@ -1,4 +1,5 @@
 use crate::cli::response_render::{RenderConfig, ResponseRenderer};
+use crate::utils::StringUtils;
 use crate::{
     config::{ModelConfig, PromptConfig},
     log_debug,
@@ -49,12 +50,15 @@ pub async fn completion(
         log_debug!("Received chat response.");
 
         if let Some(choice) = response.choices.first() {
-            if let Err(err) = message_tx
+            message_tx
                 .send(choice.message.content.clone().unwrap_or(String::from("null")))
-                .await
-            {
-                eprintln!("send message failed: {}", err);
-            };
+                .await?;
+            // if let Err(err) = message_tx
+            //     .send(choice.message.content.clone().unwrap_or(String::from("null")))
+            //     .await
+            // {
+            //     eprintln!("send message failed: {}", err);
+            // };
         }
     } else {
         let mut stream = client
@@ -81,20 +85,32 @@ pub async fn completion(
     }
     drop(message_tx);
     log_debug!("Drop Message Sender.");
-    let _ = renderer_handler.await;
+    renderer_handler.await?;
     log_debug!("Response Render exit.");
     if !errors.is_empty() {
         for e in errors {
-            println!("Error happends: {}", e);
+            eprintln!("❌Error in sending openai-api request: {}", e);
         }
+        
+        return Err("failed to send request.".into());
     }
+    renderer.render_tail_bar();
     Ok(())
 }
 
 fn create_client(model_config: &ModelConfig) -> Client<OpenAIConfig> {
+    let env_api_key=std::env::var("OPENAI_API_KEY");
+    let final_api_key=match env_api_key {
+        Ok(val)=>{
+            log_debug!("use env OPEN_API_KEY to override api-key.");
+            val
+        },
+        Err(_)=>model_config.api_key.clone().unwrap_or(String::new())
+    };
+    log_debug!("final used api-key: {}",StringUtils::mask_sensitive(&final_api_key));
     Client::with_config(
         OpenAIConfig::default()
-            .with_api_key(&model_config.api_key.clone().unwrap_or(String::new()))
+            .with_api_key(final_api_key)
             .with_api_base(model_config.base_url.as_ref().unwrap()),
     )
 }

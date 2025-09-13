@@ -40,8 +40,8 @@ pub struct Cli {
     // #[arg(long)]
     // pub config: Option<String>,
 
-    #[arg(long,value_parser = non_empty_string)]
-    pub test: Option<String>,
+    // #[arg(long,value_parser = non_empty_string)]
+    // pub test: Option<String>,
 
     /// Chat input content (when no subcommand is provided)
     pub input: Vec<String>,
@@ -75,8 +75,7 @@ pub enum Commands {
         config_type: String,
     },
 
-    //Initialize configuration file  in user directory(~/.terminal-aichat)
-    Init {},
+
 }
 
 #[derive(Subcommand)]

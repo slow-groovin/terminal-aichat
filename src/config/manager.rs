@@ -1,6 +1,7 @@
 use super::{Config, ModelConfig, PromptConfig};
 use crate::cli::structs::Cli;
 use crate::config::CryptoManager;
+use crate::utils::StringUtils;
 use clap::Parser;
 use crossterm::style::Stylize;
 use crossterm::{
@@ -103,7 +104,6 @@ Because of terminal cannot render markdown, DO NOT contain any markdown syntax(`
 
     pub fn set_model(&mut self, name: String, config: ModelConfig) -> io::Result<()> {
         let exist_model = self.get_model(&name);
-        
 
         //merge with exist config
         let mut config = merge_model(config, exist_model);
@@ -119,8 +119,6 @@ Because of terminal cannot render markdown, DO NOT contain any markdown syntax(`
         self.file_config.models.insert(name, config);
         self.save()
     }
-
-
 
     pub fn set_prompt(&mut self, name: String, config: PromptConfig) -> io::Result<()> {
         let exist_prompt = self.get_prompt(&name);
@@ -347,14 +345,7 @@ where
             execute!(stdout, SetForegroundColor(Color::DarkBlue))?;
         }
         let api_key_display = match &config.api_key {
-            Some(key) if !key.is_empty() => {
-                let key = decrypt_func(key).unwrap();
-                if key.len() <= 8 {
-                    format!("{}***", &key[..key.len().min(4)])
-                } else {
-                    format!("{}...{}", &key[..4], &key[key.len() - 4..])
-                }
-            }
+            Some(key) if !key.is_empty() => StringUtils::mask_sensitive(decrypt_func(key).as_ref().unwrap_or(&String::new())),
             _ => "".to_string(),
         };
         execute!(stdout, Print(format!("{:<15}", api_key_display)))?;
@@ -370,7 +361,7 @@ where
         )
     )?;
 
-        // 显示当前默认模型
+    // 显示当前默认模型
     if let Some(default) = default_model_name {
         execute!(stdout, Print("Current default model: "))?;
         //TODO: 改为直接使用.green()而不是set方法
@@ -378,7 +369,6 @@ where
         execute!(stdout, Print(format!("{}\n", default.clone().green())))?;
         // execute!(stdout, ResetColor)?;
     }
-
 
     Ok(())
 }
