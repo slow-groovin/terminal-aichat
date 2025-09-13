@@ -1,10 +1,10 @@
 [package]
-name = "termchat"
-version = "0.1.0"
+name = "terminal-aichat"
+version = "0.2.1"
 edition = "2024"
 
 [[bin]]
-name = "main"
+name = "aichat"
 path = "src/main.rs"
 
 [dependencies]
