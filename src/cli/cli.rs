@@ -21,7 +21,10 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // return Ok(());
     }
     // Initialize config manager
-    let mut config_manager = ConfigManager::new()?;
+    let mut config_manager = ConfigManager::load()?;
+
+    //if config file not exist, try to init and save;
+    config_manager.try_initialize_default_configs_and_save()?;
 
     // Handle subcommands
     match &cli.command {
@@ -35,7 +38,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_delete_command(&mut config_manager, config).await?;
         }
         Some(Commands::List { config_type }) => {
-            handle_list_command(&config_manager, config_type, cli.verbose).await?;
+            handle_list_command(&config_manager, config_type).await?;
         }
         Some(Commands::Init {}) => {
             handle_init().await?;
@@ -49,7 +52,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn handle_init() -> Result<(), Box<dyn std::error::Error>> {
-    let mut config_manager = ConfigManager::new()?;
+    let mut config_manager = ConfigManager::load()?;
 
     if config_manager.config_file_exists() {
         println!(
@@ -155,52 +158,48 @@ async fn handle_delete_command(
 async fn handle_list_command(
     config_manager: &ConfigManager,
     config_type: &String,
-    verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    match config_type.as_str() {
-        "models" => {
-            println!("Models:");
-            list_models(config_manager, verbose);
-        }
-        "prompts" => {
-            println!("Prompts:");
-            list_prompts(config_manager);
-        }
-        "all" => {
-            println!("Models:");
-            list_models(config_manager, verbose);
-            println!(
-                "
-Prompts:"
-            );
-            list_prompts(config_manager);
-        }
-        _ => {
-            eprintln!("{}", "Invalid config type. Use 'models', 'prompts', or 'all'.".red());
-        }
+    if config_type == "models" || config_type == "model" || config_type == "all" {
+        println!("{}", "Models:".on_blue().black());
+        config_manager.list_models();
     }
+
+    println!("\n");
+
+    if config_type == "prompts" || config_type == "prompt" || config_type == "all" {
+        println!("{}", "Prompts:".on_blue().black());
+        config_manager.list_prompts();
+    }
+
+    println!("config file location: {}", "~/.terminal-aichat/config.json".cyan());
+
     Ok(())
 }
 
 async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Result<(), Box<dyn std::error::Error>> {
-    let model_name = cli.model.clone().or(config_manager.get_default_model_name());
-
-    let prompt_name = cli.prompt.clone().or_else(|| config_manager.get_default_prompt_name());
-
+    let model_name = config_manager.get_default_model_name();
+    let prompt_name = config_manager.get_default_prompt_name();
+    let model_hint = format!(
+        "{} to list,\n{} to set, \n{} to specify default, \n{} to temporarily specify.",
+        "aichat config list model".dark_green(),
+        "aichat set model <MODEL_CONFIG_NAME> --model-name <MODEL_NAME> --base-url <BASE_URL> --api-key <API_KEY>"
+            .dark_green(),
+        "aichat use model <MODEL_CONFIG_NAME>".dark_green(),
+        "-m <MODEL_CONFIG_NAME>".dark_green()
+    );
+    let prompt_hint = format!(
+        "{} to list,\n{} to set, \n{} to specify default, \n{} to temporarily specify.",
+        "aichat config list prompt".dark_green(),
+        "aichat set prompt <PROMPT_CONFIG_NAME> --content <PROMPT_CONTENT>".dark_green(),
+        "aichat use prompt <PROMPT_CONFIG_NAME>".dark_green(),
+        "-p <PROMPT_CONFIG_NAME>".dark_green()
+    );
     if matches!(model_name.as_deref(), None | Some("")) {
-        println!(
-            "❌ No model config specified, please use {} to set or  {} to specify.",
-            "aichat use model <MODEL_CONFIG_NAME>".green(),
-            "-m <MODEL_CONFIG_NAME>".green()
-        );
+        println!("❌ No model config specified, please:\n{}", model_hint);
         exit(78);
     }
     if matches!(prompt_name.as_deref(), None | Some("")) {
-        println!(
-            "❌ No prompt config specified, please use {} to set or  {} to specify.",
-            "aichat use prompt <PROMPT_CONFIG_NAME>".green(),
-            "-p <PROMPT_CONFIG_NAME>".green()
-        );
+        println!("❌ No prompt config specified, please:\n{}", prompt_hint);
         exit(78);
     }
 
@@ -208,12 +207,20 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
     let prompt_name: &str = prompt_name.as_ref().unwrap();
 
     let model_config = config_manager.get_model(model_name).unwrap_or_else(|| {
-        println!("❌Model configuration '{}' not found", model_name.blue());
+        println!(
+            "❌Model configuration '{}' not found, please:\n{}",
+            model_name.blue(),
+            model_hint
+        );
         std::process::exit(78);
     });
 
     let prompt_config = config_manager.get_prompt(prompt_name).unwrap_or_else(|| {
-        println!("❌Prompt configuration '{}' not found", prompt_name.blue());
+        println!(
+            "❌Prompt configuration '{}' not found, please:\n{}",
+            prompt_name.blue(),
+            prompt_hint
+        );
         std::process::exit(78);
     });
 
@@ -251,48 +258,4 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
 
     log_debug!("Chat Done.");
     Ok(())
-}
-
-pub fn list_models(config_manager: &ConfigManager, verbose: bool) {
-    for model in config_manager.list_models() {
-        let is_default = config_manager
-            .get_default_model_name()
-            .map(|m| m == model)
-            .unwrap_or(false);
-        if verbose {
-            if let Some(config) = config_manager.get_model(&model) {
-                print!("  {}", model);
-                if is_default {
-                    print!(" {}", "(default)".green());
-                }
-                println!(
-                    " (model: {}, base_url: {})",
-                    config.model_name.unwrap_or(String::from("null")),
-                    config.base_url.unwrap_or(String::from("null"))
-                );
-            }
-        } else {
-            print!("  {}", model);
-            if is_default {
-                println!(" {}", "(default)".green());
-            } else {
-                println!();
-            }
-        }
-    }
-}
-
-pub fn list_prompts(config_manager: &ConfigManager) {
-    for prompt in config_manager.list_prompts() {
-        let is_default = config_manager
-            .get_default_prompt_name()
-            .map(|p| p == prompt)
-            .unwrap_or(false);
-        print!("  {}", prompt);
-        if is_default {
-            println!(" {}", "(default)".green());
-        } else {
-            println!();
-        }
-    }
 }
