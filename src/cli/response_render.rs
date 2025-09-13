@@ -3,8 +3,7 @@ use crossterm::{
     style::{Print, ResetColor, SetBackgroundColor, Stylize},
 };
 use std::{
-    io::{self, Write, stdout},
-    time::{Duration, Instant},
+    io::{self, stdout, Write}, path::is_separator, time::{Duration, Instant}
 };
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
@@ -57,7 +56,7 @@ impl ResponseRenderer {
             log_trace!("Render Status Bar.");
         }
 
-        let char_interval = Duration::from_secs_f32(1.0 / config.type_speed as f32);
+        let char_interval: Duration = Duration::from_secs_f32(1.0 / config.type_speed as f32);
 
         // 非阻塞处理所有待处理消息
         while let Some(value) = message_rx.recv().await {
@@ -98,16 +97,29 @@ impl ResponseRenderer {
             .queue(cursor::EnableBlinking)?
             .flush()
     }
+    /// 异步函数：按给定时间间隔打印字符串的每个单词
+    async fn print_with_interval(s: &str, word_interval: Duration) {
+        let mut current_word = String::new();
 
-    /// 异步函数：按给定时间间隔打印字符串的每个字符
-    async fn print_with_interval(s: &str, char_interval: Duration) {
         for c in s.chars() {
-            print!("{}", c);
-            // 立即刷新 stdout，否则可能会缓冲不立即显示
+            current_word.push(c);
+
+            // 遇到空格或换行时，打印当前单词并flush
+             if c.is_whitespace() || c.is_ascii_punctuation() || is_separator(c) {
+                print!("{}", current_word);
+                use std::io::Write;
+                std::io::stdout().flush().unwrap();
+
+                current_word.clear();
+                sleep(word_interval).await;
+            }
+        }
+
+        // 处理最后一个单词（如果字符串不以空白字符结尾）
+        if !current_word.is_empty() {
+            print!("{}", current_word);
             use std::io::Write;
             std::io::stdout().flush().unwrap();
-
-            sleep(char_interval).await;
         }
     }
 }

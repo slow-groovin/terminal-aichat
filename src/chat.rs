@@ -33,7 +33,7 @@ pub async fn completion(
         model_config_name: model_config_name,
         model_name: model_name.to_string(),
         prompt_config_name,
-        type_speed: 50, // 50字/秒
+        type_speed: 10, // 50字/秒
         disable_stream: disable_stream,
     };
     let mut errors = Vec::<OpenAIError>::new();
