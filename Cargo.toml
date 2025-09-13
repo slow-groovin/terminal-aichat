@@ -1,11 +1,9 @@
 [package]
 name = "terminal-aichat"
+description = "A simple and lightweight AI chat CLI tool using OpenAI-compatible `/v1/chat/completion` API for quick chat in terminal."
+license = "MIT"
 version = "0.2.1"
 edition = "2024"
-
-[[bin]]
-name = "aichat"
-path = "src/main.rs"
 
 [dependencies]
 async-openai = "0.29.2"
