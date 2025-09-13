@@ -6,6 +6,7 @@ pub struct ModelConfig {
     pub model_name: Option<String>,
     pub base_url: Option<String>,
     pub api_key: Option<String>, // This will be encrypted in the config file
+    pub temperature: Option<f32>
 }
 
 #[derive(Debug, Serialize, Deserialize,Clone)]
