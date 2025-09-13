@@ -84,7 +84,9 @@ impl ConfigManager {
         let default_prompt_name = "sample_prompt".to_string();
         let default_prompt_content = r#"You are a terminal assistant. 
 You are giving help to user in the terminal.
-Do not use any Markdown syntax, use plain text only."#
+Give concise responses whenever possible.
+Because of terminal cannot render markdown, DO NOT contain any markdown syntax(`,```, #, ...) in your response, use plain text only.
+"#
             .to_string();
         let default_prompt_config = PromptConfig {
             content: default_prompt_content,
