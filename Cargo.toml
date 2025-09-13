@@ -5,6 +5,10 @@ license = "MIT"
 version = "0.2.1"
 edition = "2024"
 
+[[bin]]
+name = "aichat"
+path = "src/main.rs"
+
 [dependencies]
 async-openai = "0.29.2"
 clap = { version = "4.5.47", features = ["derive","cargo","env"] }
