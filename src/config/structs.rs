@@ -8,12 +8,12 @@ pub struct ModelConfig {
     pub api_key: Option<String>, // This will be encrypted in the config file
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct PromptConfig {
     pub content: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct Config {
     pub models: HashMap<String, ModelConfig>,
     pub prompts: HashMap<String, PromptConfig>,
