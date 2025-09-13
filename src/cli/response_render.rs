@@ -3,7 +3,9 @@ use crossterm::{
     style::{Print, ResetColor, SetBackgroundColor, Stylize},
 };
 use std::{
-    io::{self, stdout, Write}, path::is_separator, time::{Duration, Instant}
+    io::{self, Write, stdout},
+    path::is_separator,
+    time::{Duration, Instant},
 };
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
@@ -39,17 +41,16 @@ impl ResponseRenderer {
 
     pub fn start_render(&self, config: RenderConfig) -> (Sender<String>, tokio::task::JoinHandle<()>) {
         let (message_tx, message_rx) = mpsc::channel(100);
-        let start_time = self.start_time; // Copy start_time
 
         // 仅启动一个渲染任务，处理所有消息
         let render_handler = tokio::spawn(async move {
-            Self::render_task_impl(start_time, config, message_rx).await;
+            Self::render_task_impl(config, message_rx).await;
         });
         return (message_tx, render_handler);
     }
 
     /// 渲染任务 - 处理所有消息并渲染
-    async fn render_task_impl(start_time: Instant, config: RenderConfig, mut message_rx: Receiver<String>) {
+    async fn render_task_impl(config: RenderConfig, mut message_rx: Receiver<String>) {
         let mut stdout = stdout();
         if !config.pure {
             let _ = Self::render_status_bar(&mut stdout, &config);
@@ -68,17 +69,8 @@ impl ResponseRenderer {
             }
         }
 
-        let cost = Instant::now() - start_time;
-
         log_debug!("Message Receiver Exit.");
-
-        if !config.pure {
-            // 打印尾部
-            let _ = stdout.queue(Print(format!("\n✅{:#?}", cost).dark_green()));
-        }
-
         // 结束时换行
-        let _ = stdout.queue(Print("\n"));
         let _ = stdout.flush();
     }
 
@@ -97,6 +89,10 @@ impl ResponseRenderer {
             .queue(cursor::EnableBlinking)?
             .flush()
     }
+    pub fn render_tail_bar(&self) {
+        let cost = Instant::now() - self.start_time;
+        println!("\n✅{}\n", format!("{:#?}", cost).dark_green());
+    }
     /// 异步函数：按给定时间间隔打印字符串的每个单词
     async fn print_with_interval(s: &str, word_interval: Duration) {
         let mut current_word = String::new();
@@ -105,7 +101,7 @@ impl ResponseRenderer {
             current_word.push(c);
 
             // 遇到空格或换行时，打印当前单词并flush
-             if c.is_whitespace() || c.is_ascii_punctuation() || is_separator(c) {
+            if c.is_whitespace() || c.is_ascii_punctuation() || is_separator(c) {
                 print!("{}", current_word);
                 use std::io::Write;
                 std::io::stdout().flush().unwrap();

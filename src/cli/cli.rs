@@ -3,7 +3,7 @@ use std::process::exit;
 use crate::cli::interactive::interactive_input;
 use crate::cli::structs::{Cli, Commands, DeleteCommands, SetCommands, UseCommands};
 use crate::config::{ConfigManager, ModelConfig, PromptConfig};
-use crate::utils::StringUtils;
+use crate::utils::StringUtilsTrait;
 use crate::utils::logger::set_log_level;
 use crate::{chat, log_debug, utils};
 use clap::Parser;
@@ -16,10 +16,10 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if cli.verbose {
         set_log_level(logger::LogLevel::Trace);
     }
-    if !cli.test.is_none() {
-        // test();
-        // return Ok(());
-    }
+    // if !cli.test.is_none() {
+    //     // test();
+    //     // return Ok(());
+    // }
     // Initialize config manager
     let mut config_manager = ConfigManager::load()?;
 
@@ -40,9 +40,6 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(Commands::List { config_type }) => {
             handle_list_command(&config_manager, config_type).await?;
         }
-        Some(Commands::Init {}) => {
-            handle_init().await?;
-        }
         None => {
             log_debug!("match None Command");
             handle_chat_command(&cli, &config_manager).await?;
@@ -51,27 +48,6 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn handle_init() -> Result<(), Box<dyn std::error::Error>> {
-    let mut config_manager = ConfigManager::load()?;
-
-    if config_manager.config_file_exists() {
-        println!(
-            "{}",
-            "Configuration file already exists. No new configuration created.".yellow()
-        );
-    } else {
-        let (model_name, prompt_name) = config_manager.initialize_default_configs()?;
-        println!(
-            "{}",
-            format!(
-                "Default configurations for model '{}' and prompt '{}' have been initialized.",
-                model_name, prompt_name
-            )
-            .green()
-        );
-    }
-    Ok(())
-}
 
 async fn handle_set_command(
     config_manager: &mut ConfigManager,
@@ -197,11 +173,11 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
         "-p <PROMPT_CONFIG_NAME>".dark_green()
     );
     if matches!(model_name.as_deref(), None | Some("")) {
-        println!("❌ No model config specified, please:\n{}", model_hint);
+        eprintln!("❌ No model config specified, please:\n{}", model_hint);
         exit(78);
     }
     if matches!(prompt_name.as_deref(), None | Some("")) {
-        println!("❌ No prompt config specified, please:\n{}", prompt_hint);
+        eprintln!("❌ No prompt config specified, please:\n{}", prompt_hint);
         exit(78);
     }
 
@@ -209,7 +185,7 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
     let prompt_name: &str = prompt_name.as_ref().unwrap();
 
     let model_config = config_manager.get_model(model_name).unwrap_or_else(|| {
-        println!(
+        eprintln!(
             "❌Model configuration '{}' not found, please:\n{}",
             model_name.blue(),
             model_hint
@@ -218,7 +194,7 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
     });
 
     let prompt_config = config_manager.get_prompt(prompt_name).unwrap_or_else(|| {
-        println!(
+        eprintln!(
             "❌Prompt configuration '{}' not found, please:\n{}",
             prompt_name.blue(),
             prompt_hint
