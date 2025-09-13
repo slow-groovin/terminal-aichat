@@ -1,26 +1,14 @@
 # terminal-aichat
 [README中文](./README_zh.md)
 
-A simple and lightweight AI chat CLI tool using OpenAI-compatible `/v1/chat/completion` API for quick chat in terminal.
+A terminal AI/LLM chat CLI
+- very simple and lightweight
+- using `/v1/chat/completion` API
 
 ```sh
-# (Prerequisites) Config a model
-aichat set model my_model_1 --model-name openai/gpt-oss-20b:free --base-url https://openrouter.ai/api/v1 --api-key <YOUR_API_KEY>
-aichat use model my_model_1
-
-# Directly send a message
-aichat how to view ubuntu release version
-
-# If your message conflicts with a subcommand, wrap it with quotes
-aichat "set swap memory to 0"
-
-# Enter interactive message mode
-aichat
-how to view ubuntu release version
-## (Press Enter for a newline, press Enter twice on an empty line to send)
+aichat [MESSAGE]   # chat 
+aichat             # chat (enter input mode)
 ```
-
----
 
 ## Quick Start
 
@@ -40,13 +28,23 @@ aichat set model my_model_1 --model-name openai/gpt-oss-20b:free --base-url http
 aichat use model my_model_1
 ```
 
-### Chat Example
+### Chat
 
 ```sh
-aichat "hello?"
+# Directly send a message
+aichat how to view ubuntu release version
+
+# If your message conflicts with a subcommand, wrap it with quotes
+aichat "set swap memory to 0"
+
+# Enter interactive message mode
+aichat
+how to view ubuntu release version
+## (Press Enter for a newline, press Enter twice on an empty line to send)
 ```
 
----
+
+
 
 ## Usage Examples
 
@@ -86,7 +84,7 @@ aichat delete model sample_model_gpt
 ### Use Temporary API Key via Environment Variable
 
 > Useful for avoiding persistent API key storage or for testing.
-> `OPENAI_API_KEY` will override any configured API key.
+> it will override API key in final request.
 
 ```sh
 export OPENAI_API_KEY=sk-***************
