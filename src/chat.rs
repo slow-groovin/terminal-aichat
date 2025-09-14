@@ -130,7 +130,6 @@ fn create_request(
         None => {}
     };
     builder
-        .temperature(model_config.temperature.unwrap())
         .messages([
             ChatCompletionRequestSystemMessageArgs::default()
                 .content(prompt_config.content.as_ref())
