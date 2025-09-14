@@ -1,9 +1,8 @@
-use crossterm::{
-    QueueableCommand, cursor,
-    style::{Print, ResetColor, SetBackgroundColor, Stylize},
-};
+use crossterm::
+    style::Stylize
+;
 use std::{
-    io::{self, Write, stdout},
+    io::{Write, stdout},
     path::is_separator,
     time::{Duration, Instant},
 };
@@ -53,7 +52,7 @@ impl ResponseRenderer {
     async fn render_task_impl(config: RenderConfig, mut message_rx: Receiver<String>) {
         let mut stdout = stdout();
         if !config.pure {
-            let _ = Self::render_status_bar(&mut stdout, &config);
+            let _ = Self::render_status_bar(&config);
             log_trace!("Render Status Bar.");
         }
 
@@ -75,19 +74,15 @@ impl ResponseRenderer {
     }
 
     /// 渲染状态栏（固定在status_row）
-    fn render_status_bar(stdout: &mut std::io::Stdout, config: &RenderConfig) -> Result<(), io::Error> {
-        stdout
-            .queue(SetBackgroundColor(crossterm::style::Color::DarkBlue))?
-            .queue(Print("model:"))?
-            .queue(Print(config.model_config_name.clone().dark_yellow().bold()))?
-            .queue(Print("   prompt:".on_dark_blue()))?
-            .queue(Print(config.prompt_config_name.clone().on_dark_blue().bold()))?
-            .queue(Print("     🤖".on_dark_blue()))?
-            .queue(Print(config.model_name.clone().cyan().bold().on_dark_blue()))?
-            .queue(ResetColor)?
-            .queue(Print("\n"))?
-            .queue(cursor::EnableBlinking)?
-            .flush()
+    fn render_status_bar(config: &RenderConfig) {
+        println!(
+            "{}  model: {}({})    prompt: {}    {}",
+            " > ".on_dark_green(),
+            config.model_config_name.as_str().blue().bold(),
+            config.model_name.as_str().cyan().bold(),
+            config.prompt_config_name.as_str().blue().bold(),
+            "".on_dark_green()
+        );
     }
     pub fn render_tail_bar(&self) {
         let cost = Instant::now() - self.start_time;
