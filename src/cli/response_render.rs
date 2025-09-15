@@ -76,10 +76,12 @@ impl ResponseRenderer {
     /// 渲染状态栏（固定在status_row）
     fn render_status_bar(config: &RenderConfig) {
         println!(
-            "{}  model: {}({})    prompt: {}    {}",
-            " > ".on_dark_green(),
+            "{}  {}: {}({})    {}: {}    {}",
+            " > ".on_green(),
+            "model".dark_green().bold(),
             config.model_config_name.as_str().blue().bold(),
             config.model_name.as_str().cyan().bold(),
+            "prompt".dark_green().bold(),
             config.prompt_config_name.as_str().blue().bold(),
             "".on_dark_green()
         );

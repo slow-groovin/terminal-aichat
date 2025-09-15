@@ -91,23 +91,25 @@ pub async fn completion(
         for e in errors {
             eprintln!("❌Error in sending openai-api request: {}", e);
         }
-        
+
         return Err("failed to send request.".into());
     }
-    renderer.render_tail_bar();
+    if !pure {
+        renderer.render_tail_bar();
+    }
     Ok(())
 }
 
 fn create_client(model_config: &ModelConfig) -> Client<OpenAIConfig> {
-    let env_api_key=std::env::var("OPENAI_API_KEY");
-    let final_api_key=match env_api_key {
-        Ok(val)=>{
+    let env_api_key = std::env::var("OPENAI_API_KEY");
+    let final_api_key = match env_api_key {
+        Ok(val) => {
             log_debug!("use env OPEN_API_KEY to override api-key.");
             val
-        },
-        Err(_)=>model_config.api_key.clone().unwrap_or(String::new())
+        }
+        Err(_) => model_config.api_key.clone().unwrap_or(String::new()),
     };
-    log_debug!("final used api-key: {}",StringUtils::mask_sensitive(&final_api_key));
+    log_debug!("final used api-key: {}", StringUtils::mask_sensitive(&final_api_key));
     Client::with_config(
         OpenAIConfig::default()
             .with_api_key(final_api_key)

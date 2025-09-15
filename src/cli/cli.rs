@@ -13,9 +13,6 @@ use utils::logger::{self};
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
-    if cli.verbose {
-        set_log_level(logger::LogLevel::Trace);
-    }
     // if !cli.test.is_none() {
     //     // test();
     //     // return Ok(());
@@ -26,6 +23,10 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //if config file not exist, try to init and save;
     config_manager.try_initialize_default_configs_and_save()?;
 
+    
+    if config_manager.config.verbose.unwrap() {
+        set_log_level(logger::LogLevel::Trace);
+    }
     // Handle subcommands
     match &cli.command {
         Some(Commands::Set { config }) => {
@@ -228,9 +229,9 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
         &model_config,
         prompt_name.to_string(),
         &prompt_config,
-        cli.pure,
-        cli.disable_stream,
-        cli.verbose,
+        config_manager.config.pure.unwrap(),
+        config_manager.config.disable_stream.unwrap(),
+        config_manager.config.verbose.unwrap(),
     )
     .await?;
 

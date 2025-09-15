@@ -15,7 +15,7 @@ use std::{fs, io};
 
 pub struct ConfigManager {
     ///merged config (file+cli)
-    config: Config,
+    pub config: Config,
     file_config: Config,
     config_path: PathBuf,
     crypto_manager: CryptoManager,
