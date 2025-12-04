@@ -25,6 +25,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let cli = Cli::parse_from(custom_args);
+    println!("OK");
 
     let config_dir = dirs::home_dir()
         .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Cannot obtain home directory"))?

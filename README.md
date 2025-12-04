@@ -2,12 +2,15 @@
 [README中文](./README_zh.md)
 
 A terminal AI/LLM chat CLI
-- very simple and lightweight
+- very simple, super fast, lightweight, and cross platform(Windows, Linux, MacOs)
 - using `/v1/chat/completion` API
 
 ```sh
-aichat [MESSAGE]   # chat 
-aichat             # chat (enter input mode)
+aichat <INPUT MESSAGE>    # chat 
+aichat "<INPUT MESSAGE>"  # chat
+aichat -- <INPUT MESSAGE> # chat
+cat input.txt | aichat   # chat
+cat input.txt | aichat "explain this"   # chat
 ```
 
 ## Quick Start
@@ -17,6 +20,10 @@ aichat             # chat (enter input mode)
 ```sh
 cargo install terminal-aichat
 ```
+
+or
+
+Download binary from Release
 
 ### Prerequisites
 
@@ -36,15 +43,7 @@ aichat how to view ubuntu release version
 
 # If your message conflicts with a subcommand, wrap it with quotes
 aichat "set swap memory to 0"
-
-# Enter interactive message mode
-aichat
-how to view ubuntu release version
-## (Press Enter for a newline, press Enter twice on an empty line to send)
 ```
-
-
-
 
 ## Usage Examples
 

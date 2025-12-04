@@ -1,9 +1,12 @@
 # terminal-aichat
-简单易用的AI CHAT CLI, 使用 Openai-compatible `/v1/chat/completion` API 在终端内进行快捷chat
+简单易用, 超级快, 跨平台(Windows, Linux, MacOs)的 AI CHAT CLI, 使用 Openai-compatible `/v1/chat/completion` API 在终端内进行快捷chat
 
 ```sh
-aichat [MESSAGE]   # chat 
-aichat             # chat (enter input mode)
+aichat <INPUT MESSAGE>    # chat 
+aichat "<INPUT MESSAGE>"  # chat
+aichat -- <INPUT MESSAGE> # chat
+cat input.txt | aichat   # chat
+cat input.txt | aichat "explain this"   # chat
 ```
 
 ## 快速入门
@@ -11,6 +14,11 @@ aichat             # chat (enter input mode)
 ```sh
 cargo install terminal-aichat
 ```
+
+or
+
+从 Release 中下载二进制程序
+
 ### 前置要求
 配置模型(以openrouter为例)
 ```sh
@@ -26,10 +34,6 @@ aichat how to view ubuntu release version
 # If your message conflicts with a subcommand, wrap it with quotes
 aichat "set swap memory to 0"
 
-# Enter interactive message mode
-aichat
-how to view ubuntu release version
-## (Press Enter for a newline, press Enter twice on an empty line to send)
 ```
 
 ### 使用示例

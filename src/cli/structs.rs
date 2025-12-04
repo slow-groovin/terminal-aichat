@@ -3,12 +3,11 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(
     name = "aichat",
-    version = "0.2.5",
+    version = "0.3.0",
     about = r#"
 A terminal AI/LLM chat tool
 
 aichat [MESSAGE]   # directly chat 
-aichat             # directly chat (enter input mode)
 aichat [COMMAND] [ARGS]     # setting or view configs"#,
     arg_required_else_help = true
 )]
@@ -74,8 +73,6 @@ pub enum Commands {
         #[arg(default_value = "all")]
         config_type: String,
     },
-
-
 }
 
 #[derive(Subcommand)]
@@ -134,7 +131,7 @@ pub enum DeleteCommands {
         name: String,
     },
     /// Delete prompt configuration
-    Prompt {             
+    Prompt {
         /// Name of the prompt configuration
         name: String,
     },
