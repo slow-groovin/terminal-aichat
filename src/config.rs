@@ -1,7 +1,11 @@
-mod manager;
-mod structs;
+mod builder;
 mod crypto;
+mod display;
+mod manager;
+mod resolver;
+mod structs;
+pub use builder::*;
+pub use display::*;
 pub use manager::*;
-pub use crypto::*;
+pub use resolver::*;
 pub use structs::*;
-

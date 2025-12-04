@@ -1,8 +1,11 @@
 // logger.rs
-use std::fmt;
-use std::sync::atomic::{AtomicU8, Ordering};
 use chrono::Local;
 use crossterm::style::Stylize;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::{
+    fmt,
+    io::{self, Write},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
@@ -63,16 +66,24 @@ pub fn log_impl(level: LogLevel, args: fmt::Arguments) {
     if (level as u8) > current_level {
         return;
     }
-    
+
     let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-    
-    println!(
+    let msg = format!(
         "{}[{}]\x1b[0m {} {}",
         level.color(),
         level.as_str(),
         timestamp.to_string().blue(),
         args
     );
+
+    match level {
+        LogLevel::Error | LogLevel::Warn => {
+            let _ = writeln!(io::stderr(), "{}", msg);
+        }
+        _ => {
+            println!("{}", msg);
+        }
+    }
 }
 
 #[macro_export]
@@ -118,10 +129,16 @@ mod tests {
     fn test_logger() {
         init_logger(); // 从环境变量初始化
         // 或者手动设置: set_log_level(LogLevel::Debug);
-        
+
+        let null_str: Result<String, ()> = Result::Err(());
+        assert_eq!(null_str.unwrap_or_default(), ""); //字符串default是空
+
+        assert_eq!(LogLevel::Debug.as_str(), "DEBUG");
+        assert_eq!(LogLevel::Debug.color(), "\x1b[36m");
+
         let name = "Rust";
         let version = 1.75;
-        
+
         log_error!("Error: {} version {}", name, version);
         log_warn!("Warning: {} version {}", name, version);
         log_info!("Info: {} version {}", name, version);

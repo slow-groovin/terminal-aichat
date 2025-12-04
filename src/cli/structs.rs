@@ -134,7 +134,7 @@ pub enum DeleteCommands {
         name: String,
     },
     /// Delete prompt configuration
-    Prompt {
+    Prompt {             
         /// Name of the prompt configuration
         name: String,
     },

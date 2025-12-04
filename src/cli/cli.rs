@@ -1,8 +1,12 @@
+use std::io::{self, IsTerminal, Read};
 use std::process::exit;
 
 use crate::cli::interactive::interactive_input;
 use crate::cli::structs::{Cli, Commands, DeleteCommands, SetCommands, UseCommands};
-use crate::config::{ConfigManager, ModelConfig, PromptConfig};
+
+use crate::config::{
+    Config, ConfigBuilder, ConfigManager, ModelConfig, PromptConfig, merge_config, print_models, print_prompts,
+};
 use crate::utils::StringUtilsTrait;
 use crate::utils::logger::set_log_level;
 use crate::{chat, log_debug, utils};
@@ -11,49 +15,63 @@ use crossterm::style::Stylize;
 use utils::logger::{self};
 
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::parse();
+    let mut custom_args = std::env::args().collect::<Vec<_>>();
 
-    // if !cli.test.is_none() {
-    //     // test();
-    //     // return Ok(());
-    // }
-    // Initialize config manager
-    let mut config_manager = ConfigManager::load()?;
+    if !io::stdin().is_terminal() {
+        //if has pipe stdin
+        let mut input = String::new();
+        io::stdin().read_to_string(&mut input).unwrap_or_default();
+        custom_args.push(input.trim().to_string());
+    }
 
-    //if config file not exist, try to init and save;
-    config_manager.try_initialize_default_configs_and_save()?;
+    let cli = Cli::parse_from(custom_args);
 
-    
-    if config_manager.config.verbose.unwrap() {
+    let config_dir = dirs::home_dir()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Cannot obtain home directory"))?
+        .join(".terminal-aichat");
+    let mut config_manager = ConfigManager::new(&config_dir)?;
+    let mut file_config = config_manager.load()?;
+
+    // 如果配置文件不存在,初始化默认配置
+    if !config_manager.exists() {
+        file_config = ConfigBuilder::new(file_config).with_defaults().build();
+        config_manager.save(&file_config)?;
+    }
+
+    let runtime_config = merge_config(&file_config, &cli);
+
+    if runtime_config.verbose {
         set_log_level(logger::LogLevel::Trace);
     }
+
     // Handle subcommands
     match &cli.command {
         Some(Commands::Set { config }) => {
-            handle_set_command(&mut config_manager, config).await?;
+            handle_set_command(&mut file_config, &mut config_manager, config).await?;
         }
         Some(Commands::Use { config }) => {
-            handle_use_command(&mut config_manager, config).await?;
+            handle_use_command(&mut file_config, &mut config_manager, config).await?;
         }
         Some(Commands::Delete { config }) => {
-            handle_delete_command(&mut config_manager, config).await?;
+            handle_delete_command(&mut file_config, &mut config_manager, config).await?;
         }
         Some(Commands::List { config_type }) => {
-            handle_list_command(&config_manager, config_type).await?;
+            handle_list_command(&mut file_config, config_type).await?;
         }
         None => {
             log_debug!("match None Command");
-            handle_chat_command(&cli, &config_manager).await?;
+            handle_chat_command(&runtime_config, &mut &cli).await?;
         }
     }
+
     Ok(())
 }
 
-
 async fn handle_set_command(
+    file_config: &mut Config,
     config_manager: &mut ConfigManager,
     set_command: &SetCommands,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> io::Result<()> {
     match set_command {
         SetCommands::Model {
             name,
@@ -62,24 +80,29 @@ async fn handle_set_command(
             api_key,
             temperature,
         } => {
-            config_manager.set_model(
+            file_config.models.insert(
                 name.clone(),
                 ModelConfig {
                     base_url: base_url.clone(),
                     model_name: model_name.clone(),
                     api_key: api_key.clone(),
-                    temperature: temperature.clone()
+                    temperature: temperature.clone(),
                 },
-            )?;
+            );
+            config_manager.save(file_config)?;
+            // config_manager.save(
+            //     name.clone(),
+            //     ModelConfig?;
             println!("{}", format!("Model configuration '{}' has been set.", name).green());
         }
         SetCommands::Prompt { name, content } => {
-            config_manager.set_prompt(
+            file_config.prompts.insert(
                 name.clone(),
                 PromptConfig {
                     content: content.clone(),
                 },
-            )?;
+            );
+            config_manager.save(file_config)?;
             println!("{}", format!("Prompt configuration '{}' has been set.", name).green());
         }
     }
@@ -87,21 +110,24 @@ async fn handle_set_command(
 }
 
 async fn handle_use_command(
+    file_config: &mut Config,
     config_manager: &mut ConfigManager,
     use_command: &UseCommands,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match use_command {
         UseCommands::Model { name } => {
-            if config_manager.get_model(name).is_some() {
-                config_manager.set_default_model(name.clone())?;
+            if file_config.models.get(name).is_some() {
+                file_config.default_model = Some(name.clone());
+                config_manager.save(file_config)?;
                 println!("{}", format!("Default model has been set to '{}'.", name).green());
             } else {
                 eprintln!("{}", format!("Model configuration '{}' not found.", name).red());
             }
         }
         UseCommands::Prompt { name } => {
-            if config_manager.get_prompt(name).is_some() {
-                config_manager.set_default_prompt(name.clone())?;
+            if file_config.prompts.get(name).is_some() {
+                file_config.default_prompt = Some(name.clone());
+                config_manager.save(file_config)?;
                 println!("{}", format!("Default prompt has been set to '{}'.", name).green());
             } else {
                 eprintln!("{}", format!("Prompt configuration '{}' not found.", name).red());
@@ -112,19 +138,22 @@ async fn handle_use_command(
 }
 
 async fn handle_delete_command(
+    file_config: &mut Config,
     config_manager: &mut ConfigManager,
     delete_command: &DeleteCommands,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match delete_command {
         DeleteCommands::Model { name } => {
-            config_manager.delete_model(name)?;
+            file_config.models.remove(name);
+            config_manager.save(file_config)?;
             println!(
                 "{}",
                 format!("Model configuration '{}' has been deleted.", name).green()
             );
         }
         DeleteCommands::Prompt { name } => {
-            config_manager.delete_prompt(name)?;
+            file_config.prompts.remove(name);
+            config_manager.save(file_config)?;
             println!(
                 "{}",
                 format!("Prompt configuration '{}' has been deleted.", name).green()
@@ -134,20 +163,15 @@ async fn handle_delete_command(
     Ok(())
 }
 
-async fn handle_list_command(
-    config_manager: &ConfigManager,
-    config_type: &String,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn handle_list_command(file_config: &mut Config, config_type: &String) -> Result<(), Box<dyn std::error::Error>> {
     if config_type == "models" || config_type == "model" || config_type == "all" {
-        println!("{}", "Models:".on_blue().black());
-        config_manager.list_models();
+        print_models(file_config)?;
     }
 
     println!("\n");
 
     if config_type == "prompts" || config_type == "prompt" || config_type == "all" {
-        println!("{}", "Prompts:".on_blue().black());
-        config_manager.list_prompts();
+        print_prompts(file_config);
     }
 
     println!("config file location: {}", "~/.terminal-aichat/config.json".cyan());
@@ -155,9 +179,9 @@ async fn handle_list_command(
     Ok(())
 }
 
-async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Result<(), Box<dyn std::error::Error>> {
-    let model_name = config_manager.get_default_model_name();
-    let prompt_name = config_manager.get_default_prompt_name();
+async fn handle_chat_command(runtime_config: &Config, cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
+    let model_name = runtime_config.default_model.clone();
+    let prompt_name = runtime_config.default_prompt.clone();
     let model_hint = format!(
         "{} to list,\n{} to set, \n{} to specify default, \n{} to temporarily specify.",
         "aichat config list model".dark_green(),
@@ -185,7 +209,7 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
     let model_name: &str = model_name.as_ref().unwrap();
     let prompt_name: &str = prompt_name.as_ref().unwrap();
 
-    let model_config = config_manager.get_model(model_name).unwrap_or_else(|| {
+    let model_config = runtime_config.models.get(model_name).unwrap_or_else(|| {
         eprintln!(
             "❌Model configuration '{}' not found, please:\n{}",
             model_name.blue(),
@@ -194,7 +218,7 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
         std::process::exit(78);
     });
 
-    let prompt_config = config_manager.get_prompt(prompt_name).unwrap_or_else(|| {
+    let prompt_config = runtime_config.prompts.get(prompt_name).unwrap_or_else(|| {
         eprintln!(
             "❌Prompt configuration '{}' not found, please:\n{}",
             prompt_name.blue(),
@@ -229,9 +253,9 @@ async fn handle_chat_command(cli: &Cli, config_manager: &ConfigManager) -> Resul
         &model_config,
         prompt_name.to_string(),
         &prompt_config,
-        config_manager.config.pure.unwrap(),
-        config_manager.config.disable_stream.unwrap(),
-        config_manager.config.verbose.unwrap(),
+        runtime_config.pure,
+        runtime_config.disable_stream,
+        runtime_config.verbose,
     )
     .await?;
 
