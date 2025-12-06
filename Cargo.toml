@@ -3,7 +3,7 @@ name = "terminal-aichat"
 description = "A terminal AI/LLM chat tool. Extremely simple and easy to use. Using OpenAI-compatible `/v1/chat/completion` API"
 repository = "https://github.com/slow-groovin/terminal-aichat"
 license = "MIT"
-version = "0.3.1"
+version = "0.3.3"
 edition = "2024"
 homepage = "https://github.com/slow-groovin/terminal-aichat"
 
