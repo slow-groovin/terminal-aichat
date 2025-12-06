@@ -9,6 +9,8 @@ cat input.txt | aichat   # chat
 cat input.txt | aichat "explain this"   # chat
 ```
 
+<div style="text-align: center;"><img src="./aichat.webp" alt="usage" width="740" height="257"></div>
+
 ## 快速入门
 ### 安装
 ```sh
@@ -17,7 +19,7 @@ cargo install terminal-aichat
 
 or
 
-从 Release 中下载二进制程序
+参考[Release](https://github.com/slow-groovin/terminal-aichat/releases)页面中的一键安装脚本或直接下载二进制程序
 
 ### 前置要求
 配置模型(以openrouter为例)

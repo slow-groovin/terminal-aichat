@@ -1,29 +1,35 @@
 # terminal-aichat
+
 [README中文](./README_zh.md)
 
 A terminal AI/LLM chat CLI
 - very simple, super fast, lightweight, and cross platform(Windows, Linux, MacOs)
 - using `/v1/chat/completion` API
 
+
+<div style="text-align: center;"><img src="./aichat.webp" alt="usage" width="740" height="257"></div>
+
 ```sh
-aichat <INPUT MESSAGE>    # chat 
-aichat "<INPUT MESSAGE>"  # chat
-aichat -- <INPUT MESSAGE> # chat
-cat input.txt | aichat   # chat
-cat input.txt | aichat "explain this"   # chat
+aichat <INPUT MESSAGE>    
+aichat "<INPUT MESSAGE>"  
+aichat -- <INPUT MESSAGE> 
+cat input.txt | aichat   
+cat input.txt | aichat "explain this"
 ```
 
 ## Quick Start
 
 ### Installation
 
+using cargo:
 ```sh
 cargo install terminal-aichat
 ```
 
 or
 
-Download binary from Release
+using scripts in [Release](https://github.com/slow-groovin/terminal-aichat/releases) page or download exectuable binaries directly.
+
 
 ### Prerequisites
 
