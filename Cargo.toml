@@ -5,6 +5,7 @@ repository = "https://github.com/slow-groovin/terminal-aichat"
 license = "MIT"
 version = "0.3.1"
 edition = "2024"
+homepage = "https://github.com/slow-groovin/terminal-aichat"
 
 [[bin]]
 name = "aichat"
@@ -26,3 +27,8 @@ base64 = "0.22"
 aes-gcm = "0.10.3"
 sha2 = "0.10.9"
 chrono = { version = "0.4", features = ["serde"] }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
