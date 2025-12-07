@@ -1,9 +1,9 @@
-<div style="text-align: center;">
+<div align="center">
 <h1>terminal-aichat</h1>
 </div>
 
 
-<div style="text-align: center;"><img src="./aichat.webp" alt="terminal-aichat" height="140" /></div>
+<div align="center"><img src="./aichat.webp" alt="terminal-aichat" height="140" /></div>
 
 [README中文](./README_zh.md)
 
