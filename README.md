@@ -1,6 +1,9 @@
-<div style="text-align: center;"><img src="./aichat.webp" alt="usage" /></div>
+<div style="text-align: center;">
+<h1>terminal-aichat</h1>
+</div>
 
-# terminal-aichat
+
+<div style="text-align: center;"><img src="./aichat.webp" alt="terminal-aichat" height="140" /></div>
 
 [README中文](./README_zh.md)
 
@@ -22,24 +25,33 @@ aichat <INPUT MESSAGE>
 ### Installation
 
 
+#### sh
 ```sh
-# sh
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.sh | sh
+```
 
-# build install with cargo:
+#### cargo
+```sh
 cargo install terminal-aichat
+```
 
-# homebrew
+#### homebrew
+```sh
 brew install slow-groovin/tap/terminal-aichat
+```
 
-# npm
+#### npm
+```sh
 npm install terminal-aichat@latest
+```
 
-# powershell
+#### powershell
+```sh
 powershell -ExecutionPolicy Bypass -c "irm https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.ps1 | iex"
 ```
 
-or download exectuable binaries directly in [Release](https://github.com/slow-groovin/terminal-aichat/releases) page.
+#### binary
+or download executable binaries directly in [Release](https://github.com/slow-groovin/terminal-aichat/releases) page.
 
 ### Prerequisites
 

@@ -1,6 +1,11 @@
-<div style="text-align: center;"><img src="./aichat.webp" alt="usage" /></div>
 
-# terminal-aichat
+<div style="text-align: center;">
+<h1>terminal-aichat</h1>
+</div>
+
+
+<div style="text-align: center;"><img src="./aichat.webp" alt="terminal-aichat" height="140" /></div>
+
 
 终端内AI/LLM聊天的CLI
 - 使用Rust编写，轻量级（6.5MB二进制大小），超级快。
@@ -15,24 +20,31 @@ aichat <INPUT MESSAGE>
 
 ### 安装
 
+
+#### sh
 ```sh
-# sh
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.sh | sh
-
-# 使用cargo构建安装：
-cargo install terminal-aichat
-
-# homebrew
-brew install slow-groovin/tap/terminal-aichat
-
-# npm
-npm install terminal-aichat@latest
-
-# powershell
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.ps1 | iex"
 ```
 
-or 在[Release](https://github.com/slow-groovin/terminal-aichat/releases)页面中直接下载二进制程序。
+#### cargo
+```sh
+cargo install terminal-aichat
+```
+
+#### homebrew
+```sh
+brew install slow-groovin/tap/terminal-aichat
+```
+#### npm
+```sh
+npm install terminal-aichat@latest
+```
+#### powershell
+```sh
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.ps1 | iex"
+```
+#### binary
+在[Release](https://github.com/slow-groovin/terminal-aichat/releases)页面中直接下载二进制程序。
 
 ### 前置要求
 配置模型(以openrouter为例)
