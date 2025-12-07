@@ -1,25 +1,38 @@
+<div style="text-align: center;"><img src="./aichat.webp" alt="usage" /></div>
+
 # terminal-aichat
-简单易用, 超级快, 跨平台(Windows, Linux, MacOs)的 AI CHAT CLI, 使用 Openai-compatible `/v1/chat/completion` API 在终端内进行快捷chat
+
+终端内AI/LLM聊天的CLI
+- 使用Rust编写，轻量级（6.5MB二进制大小），超级快。
+- 跨平台（Windows, Linux, MacOS）
+- 使用 `/v1/chat/completion` API
 
 ```sh
-aichat <INPUT MESSAGE>    # chat 
-aichat "<INPUT MESSAGE>"  # chat
-aichat -- <INPUT MESSAGE> # chat
-cat input.txt | aichat   # chat
-cat input.txt | aichat "explain this"   # chat
+aichat <INPUT MESSAGE>
 ```
-
-<div style="text-align: center;"><img src="./aichat.webp" alt="usage" width="740" height="257"></div>
 
 ## 快速入门
+
 ### 安装
+
 ```sh
+# sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.sh | sh
+
+# 使用cargo构建安装：
 cargo install terminal-aichat
+
+# homebrew
+brew install slow-groovin/tap/terminal-aichat
+
+# npm
+npm install terminal-aichat@latest
+
+# powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.ps1 | iex"
 ```
 
-or
-
-参考[Release](https://github.com/slow-groovin/terminal-aichat/releases)页面中的一键安装脚本或直接下载二进制程序
+or 在[Release](https://github.com/slow-groovin/terminal-aichat/releases)页面中直接下载二进制程序。
 
 ### 前置要求
 配置模型(以openrouter为例)
@@ -30,15 +43,25 @@ aichat use model my_model_1
 ```
 ### chat
 ```sh
-# Directly send a message
+# 直接发送消息
 aichat how to view ubuntu release version
 
-# If your message conflicts with a subcommand, wrap it with quotes
+# 如果消息与子命令冲突，用引号包裹
 aichat "set swap memory to 0"
 
+# 其他方式
+aichat "<INPUT MESSAGE>"
+aichat -- <INPUT MESSAGE>
+
+# 管道
+cat input.txt | aichat
+cat input.txt | aichat "explain this"
+
+# 纯净模式（不显示模型/提示配置和成本信息）
+aichat --pure "Hello?"
 ```
 
-### 使用示例
+## 配置和命令
 #### 查看配置
 ```sh
 aichat list
@@ -100,9 +123,3 @@ aichat --verbose "Hello?"
 ```sh
 aichat --disable-stream "Hello?"
 ```
-
-
-
-
-
-

@@ -1,35 +1,45 @@
+<div style="text-align: center;"><img src="./aichat.webp" alt="usage" /></div>
+
 # terminal-aichat
 
 [README中文](./README_zh.md)
 
-A terminal AI/LLM chat CLI
-- very simple, super fast, lightweight, and cross platform(Windows, Linux, MacOs)
+A CLI for AI/LLM chat in terminal
+- written in rust, light (6.5MB binary size), super fast.
+- multi platform(Windows, Linux, MacOS)
 - using `/v1/chat/completion` API
 
 
-<div style="text-align: center;"><img src="./aichat.webp" alt="usage" width="740" height="257"></div>
 
 ```sh
 aichat <INPUT MESSAGE>    
-aichat "<INPUT MESSAGE>"  
-aichat -- <INPUT MESSAGE> 
-cat input.txt | aichat   
-cat input.txt | aichat "explain this"
 ```
+
+
 
 ## Quick Start
 
 ### Installation
 
-using cargo:
+
 ```sh
+# sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.sh | sh
+
+# build install with cargo:
 cargo install terminal-aichat
+
+# homebrew
+brew install slow-groovin/tap/terminal-aichat
+
+# npm
+npm install terminal-aichat@latest
+
+# powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/slow-groovin/terminal-aichat/releases/latest/download/terminal-aichat-installer.ps1 | iex"
 ```
 
-or
-
-using scripts in [Release](https://github.com/slow-groovin/terminal-aichat/releases) page or download exectuable binaries directly.
-
+or download exectuable binaries directly in [Release](https://github.com/slow-groovin/terminal-aichat/releases) page.
 
 ### Prerequisites
 
@@ -49,9 +59,20 @@ aichat how to view ubuntu release version
 
 # If your message conflicts with a subcommand, wrap it with quotes
 aichat "set swap memory to 0"
+
+# other ways
+aichat "<INPUT MESSAGE>"  
+aichat -- <INPUT MESSAGE> 
+
+# pipe
+cat input.txt | aichat   
+cat input.txt | aichat "explain this"
+
+# pure mode (display for model/prompts configs and costs will be hide)
+aichat --pure "Hello?"
 ```
 
-## Usage Examples
+## Configurations And Commands
 
 ### View Configurations
 
