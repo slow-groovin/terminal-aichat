@@ -26,9 +26,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let cli = Cli::parse_from(custom_args);
 
-    let config_dir = dirs::home_dir()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Cannot obtain home directory"))?
-        .join(".terminal-aichat");
+    let config_dir = ConfigManager::get_config_dir()?;
     let mut config_manager = ConfigManager::new(&config_dir)?;
     let mut file_config = config_manager.load()?;
 
@@ -180,7 +178,8 @@ async fn handle_list_command(file_config: &mut Config, config_type: &String) -> 
         print_prompts(file_config);
     }
 
-    println!("config file location: {}", "~/.terminal-aichat/config.json".cyan());
+    let config_path = ConfigManager::get_config_dir()?.join("config.json");
+    println!("config file location: {}", config_path.display().to_string().cyan());
 
     Ok(())
 }

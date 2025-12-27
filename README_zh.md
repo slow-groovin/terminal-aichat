@@ -109,11 +109,18 @@ aichat "Hello?"
 #### 配置文件
 > 第一次运行程序时, 会自动初始化配置文件
 
-- `~/.terminal-aichat/config.json` 存储配置json
-- `~/.terminal-aichat/aes_key.bin` 存储api-key的随机加密key(api-key的加密的目的是避免明文方式本地存储)
+- 配置文件位置（跨平台）：
+  - Linux: `~/.config/terminal-aichat/config.json`
+  - macOS: `~/Library/Application Support/terminal-aichat/config.json`
+  - Windows: `%APPDATA%\terminal-aichat\config.json`
+- 加密密钥文件存储在配置目录下的 `aes_key.bin`（用于加密API密钥，避免明文存储）
 
 ```sh
-cat ~/.terminal-aichat/config.json
+# 查看配置目录位置
+aichat list
+
+# 查看配置文件内容（以Linux为例）
+cat ~/.config/terminal-aichat/config.json
 ```
 #### 设置日志级别
 ```sh

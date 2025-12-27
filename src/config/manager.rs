@@ -11,6 +11,15 @@ pub struct ConfigManager {
 }
 
 impl ConfigManager {
+    /// 获取跨平台的配置目录
+    /// - Windows: %APPDATA%\terminal-aichat
+    /// - macOS: ~/Library/Application Support/terminal-aichat
+    /// - Linux: ~/.config/terminal-aichat
+    pub fn get_config_dir() -> io::Result<PathBuf> {
+        let config_dir = dirs::config_dir()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Cannot obtain config directory"))?;
+        Ok(config_dir.join("terminal-aichat"))
+    }
     pub fn new(config_dir: &Path) -> io::Result<Self> {
         if !config_dir.exists() {
             fs::create_dir_all(config_dir)?;

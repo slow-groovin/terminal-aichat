@@ -133,11 +133,19 @@ aichat "Hello?"
 
 > On first run, the config file is automatically initialized.
 
-* `~/.terminal-aichat/config.json` — stores configuration JSON
-* `~/.terminal-aichat/aes_key.bin` — stores the random encryption key for securing API keys (to avoid plaintext storage)
+Configuration file locations (cross-platform):
+- Linux: `~/.config/terminal-aichat/config.json`
+- macOS: `~/Library/Application Support/terminal-aichat/config.json`
+- Windows: `%APPDATA%\terminal-aichat\config.json`
+
+The encryption key file is stored as `aes_key.bin` in the config directory (used to encrypt API keys and avoid plaintext storage).
 
 ```sh
-cat ~/.terminal-aichat/config.json
+# View config directory location
+aichat list
+
+# View config file content (Linux example)
+cat ~/.config/terminal-aichat/config.json
 ```
 
 ### Set Log Level
