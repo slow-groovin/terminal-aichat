@@ -9,6 +9,11 @@ use std::io::{self, Write};
 pub fn print_models(config: &Config) -> io::Result<()> {
     let mut stdout = io::stdout();
     println!("{}", "Models:".on_blue().black());
+    // 显示默认模型
+    if let Some(default) = &config.default_model {
+        execute!(stdout, Print("Default model: "))?;
+        execute!(stdout, Print(format!("{}\n", default.clone().green())))?;
+    }
 
     // 表头
     writeln!(
@@ -35,12 +40,6 @@ pub fn print_models(config: &Config) -> io::Result<()> {
         stdout,
         "└─────────────────────┴─────────────────────┴─────────────────────────────────────┴─────────────────┘"
     )?;
-
-    // 显示默认模型
-    if let Some(default) = &config.default_model {
-        execute!(stdout, Print("Current default model: "))?;
-        execute!(stdout, Print(format!("{}\n", default.clone().green())))?;
-    }
 
     Ok(())
 }
@@ -86,7 +85,11 @@ fn print_model_row(stdout: &mut io::Stdout, name: &str, model: &ModelConfig, is_
 /// 打印提示列表
 pub fn print_prompts(config: &Config) {
     println!("{}", "Prompts:".on_blue().black());
-
+    // 显示默认模型
+    if let Some(default) = &config.default_prompt {
+        print!("Default prompt: ");
+        print!("{}\n", default.clone().green());
+    }
     for (name, prompt) in &config.prompts {
         let default_text = if config.default_prompt.as_deref() == Some(name) {
             "(default)".green()

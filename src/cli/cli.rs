@@ -80,15 +80,21 @@ async fn handle_set_command(
             api_key,
             temperature,
         } => {
-            file_config.models.insert(
-                name.clone(),
-                ModelConfig {
-                    base_url: base_url.clone(),
-                    model_name: model_name.clone(),
-                    api_key: api_key.clone(),
-                    temperature: temperature.clone(),
-                },
-            );
+            let mut new_model = ModelConfig {
+                base_url: base_url.clone(),
+                model_name: model_name.clone(),
+                api_key: api_key.clone(),
+                temperature: temperature.clone(),
+            };
+            let raw_model = file_config.models.get(name).clone();
+            match raw_model {
+                Some(raw_model) => {
+                    //merged
+                    new_model = new_model.merge_with(raw_model);
+                }
+                None => {}
+            };
+            file_config.models.insert(name.clone(), new_model);
             config_manager.save(file_config)?;
             // config_manager.save(
             //     name.clone(),
