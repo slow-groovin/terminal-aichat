@@ -1,5 +1,4 @@
 mod builder;
-mod crypto;
 mod display;
 mod manager;
 mod resolver;
