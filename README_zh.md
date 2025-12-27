@@ -35,7 +35,9 @@ cargo install terminal-aichat
 ```sh
 brew install slow-groovin/tap/terminal-aichat
 ```
-#### npm
+#### ~~npm~~
+>Deprecated, but you can still install version 0.3.5 with it
+
 ```sh
 npm install terminal-aichat@latest
 ```
