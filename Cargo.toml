@@ -1,11 +1,18 @@
 [package]
 name = "terminal-aichat"
 description = "A cli for AI/LLM chat in terminal. Extremely simple and easy to use. Using OpenAI-compatible `/v1/chat/completion` API"
+authors = ["slow-groovin"]
 repository = "https://github.com/slow-groovin/terminal-aichat"
 license = "MIT"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 homepage = "https://github.com/slow-groovin/terminal-aichat"
+
+[package.metadata.wix]
+upgrade-guid = "82D9C73C-A524-40CF-B7BB-F4535F1BB605"
+path-guid = "F48B7532-8194-4C16-9135-BF30FA4798B2"
+license = false
+eula = false
 
 [[bin]]
 name = "aichat"
